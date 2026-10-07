@@ -1,0 +1,83 @@
+version: '3'
+
+vars:
+  PORT: '{{.PORT | default "8000"}}'
+  NPM_CACHE: '{{.NPM_CACHE | default ".task-cache/npm"}}'
+
+tasks:
+  default:
+    desc: Show the available project tasks
+    cmds:
+      - task --list
+    silent: true
+
+  install:
+    desc: Install the locked local lint and formatting tools
+    preconditions:
+      - sh: command -v npm
+        msg: Install Node.js and npm first.
+    cmds:
+      - npm ci --cache {{.NPM_CACHE}}
+
+  preview:
+    aliases: [serve, dev]
+    desc: Preview the static site at http://localhost:{{.PORT}}
+    preconditions:
+      - sh: command -v python3
+        msg: Install Python 3 to run the local preview server.
+    cmds:
+      - python3 -m http.server {{.PORT}} --bind 127.0.0.1
+
+  preview:dist:
+    aliases: [preview-dist]
+    desc: Build and serve the deployment output at http://localhost:{{.PORT}}
+    deps: [build]
+    preconditions:
+      - sh: command -v python3
+        msg: Install Python 3 to run the local preview server.
+    cmds:
+      - python3 -m http.server {{.PORT}} --bind 127.0.0.1 --directory dist
+
+  build:
+    desc: Build the static site into dist/ for deployment
+    preconditions:
+      - sh: command -v node
+        msg: Install Node.js to build the static site.
+    cmds:
+      - npm run build
+
+  lint:
+    desc: Run JavaScript, JSON, and formatting checks
+    deps: [lint:js, lint:json, format:check]
+
+  lint:js:
+    desc: Check JavaScript with ESLint
+    preconditions:
+      - sh: test -x node_modules/.bin/eslint
+        msg: Run 'task install' to install the project tools.
+    cmds:
+      - npm run lint:js
+
+  lint:json:
+    desc: Check exercise data is valid JSON
+    preconditions:
+      - sh: command -v node
+        msg: Install Node.js to validate the exercise data.
+    cmds:
+      - npm run lint:json
+
+  format:
+    desc: Format project source and configuration files
+    preconditions:
+      - sh: test -x node_modules/.bin/prettier
+        msg: Run 'task install' to install the project tools.
+    cmds:
+      - npm run format
+
+  format:check:
+    desc: Check formatting without changing files
+    preconditions:
+      - sh: test -x node_modules/.bin/prettier
+        msg: Run 'task install' to install the project tools.
+    cmds:
+      - npm run format:check

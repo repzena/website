@@ -1,0 +1,112 @@
+name: CI and GitHub Pages deployment
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: form-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    name: Lint and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Lint and validate content
+        run: npm run lint
+
+      - name: Build deployment site
+        run: npm run build
+
+      - name: Upload deployment site
+        uses: actions/upload-artifact@v7
+        with:
+          name: site-dist
+          path: dist/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
+  deploy:
+    name: Publish to the Pages repository
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: form-pages-production
+      cancel-in-progress: false
+    steps:
+      - name: Download built site
+        uses: actions/download-artifact@v8
+        with:
+          name: site-dist
+          path: dist
+
+      - name: Check deployment configuration
+        env:
+          PAGES_REPOSITORY: ${{ vars.PAGES_REPOSITORY }}
+          PAGES_BRANCH: ${{ vars.PAGES_BRANCH || 'main' }}
+          PAGES_DEPLOY_TOKEN: ${{ secrets.PAGES_DEPLOY_TOKEN }}
+        run: |
+          if [[ ! "$PAGES_REPOSITORY" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
+            echo "Set the PAGES_REPOSITORY Actions variable to owner/repository (for example, my-org/my-org.github.io)." >&2
+            exit 1
+          fi
+          if [[ -z "$PAGES_DEPLOY_TOKEN" ]]; then
+            echo "Set the PAGES_DEPLOY_TOKEN Actions secret with write access to the Pages repository." >&2
+            exit 1
+          fi
+          if [[ "$PAGES_REPOSITORY" == "$GITHUB_REPOSITORY" ]]; then
+            echo "PAGES_REPOSITORY must be different from the source repository." >&2
+            exit 1
+          fi
+          if ! git check-ref-format --branch "$PAGES_BRANCH" >/dev/null; then
+            echo "PAGES_BRANCH must be a valid Git branch name." >&2
+            exit 1
+          fi
+
+      - name: Check out Pages repository
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ vars.PAGES_REPOSITORY }}
+          ref: ${{ vars.PAGES_BRANCH || 'main' }}
+          token: ${{ secrets.PAGES_DEPLOY_TOKEN }}
+          path: pages-repo
+          fetch-depth: 1
+
+      - name: Publish built site
+        env:
+          PAGES_BRANCH: ${{ vars.PAGES_BRANCH || 'main' }}
+        run: |
+          rsync -a --delete --exclude='.git/' --exclude='CNAME' dist/ pages-repo/
+          git -C pages-repo config user.name "github-actions[bot]"
+          git -C pages-repo config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C pages-repo add --all
+          if git -C pages-repo diff --cached --quiet; then
+            echo "The Pages repository already has this build."
+            exit 0
+          fi
+          git -C pages-repo commit -m "Deploy ${GITHUB_REPOSITORY}@${GITHUB_SHA}"
+          git -C pages-repo push origin "HEAD:${PAGES_BRANCH}"

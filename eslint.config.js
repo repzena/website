@@ -3,6 +3,9 @@ import js from '@eslint/js';
 const browserGlobals = Object.fromEntries(
   [
     'Blob',
+    'Buffer',
+    'DOMException',
+    'Storage',
     'URL',
     'clearTimeout',
     'console',
@@ -21,7 +24,7 @@ const browserGlobals = Object.fromEntries(
 
 export default [
   {
-    files: ['app.js'],
+    files: ['app.js', 'playwright.config.js', 'tests/**/*.js'],
     ...js.configs.recommended,
     languageOptions: {
       ...js.configs.recommended.languageOptions,

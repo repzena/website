@@ -8,14 +8,16 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
-    "lint:js": "eslint app.js",
+    "lint:js": "eslint app.js playwright.config.js tests",
     "lint:json": "node scripts/validate-data.mjs",
     "lint": "npm run lint:js && npm run lint:json && npm run format:check",
-    "format": "prettier --write index.html app.js service-worker.js styles.css data/exercises.json README.md AGENTS.md Taskfile.yml package.json eslint.config.js .prettierrc.json .github/workflows/ci-deploy.yml",
-    "format:check": "prettier --check index.html app.js service-worker.js styles.css data/exercises.json README.md AGENTS.md Taskfile.yml package.json eslint.config.js .prettierrc.json .github/workflows/ci-deploy.yml"
+    "format": "prettier --write index.html app.js service-worker.js styles.css data/exercises.json README.md AGENTS.md Taskfile.yml package.json playwright.config.js tests/*.spec.js eslint.config.js .prettierrc.json .github/workflows/ci-deploy.yml",
+    "format:check": "prettier --check index.html app.js service-worker.js styles.css data/exercises.json README.md AGENTS.md Taskfile.yml package.json playwright.config.js tests/*.spec.js eslint.config.js .prettierrc.json .github/workflows/ci-deploy.yml",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",
+    "@playwright/test": "^1.64.0",
     "eslint": "^10.0.0",
     "prettier": "^3.9.9"
   }

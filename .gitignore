@@ -253,3 +253,7 @@ $RECYCLE.BIN/
 
 # Private routines and personal data
 /private-data/
+
+# Playwright browser-test output
+/playwright-report/
+/test-results/

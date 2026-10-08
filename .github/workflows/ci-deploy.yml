@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   build:
-    name: Lint and build
+    name: Verify and build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -28,14 +28,25 @@ jobs:
           node-version: 24
           cache: npm
 
-      - name: Install locked dependencies
-        run: npm ci
+      - name: Set up Task
+        uses: go-task/setup-task@v2
+        with:
+          version: 3.53.1
 
-      - name: Lint and validate content
-        run: npm run lint
+      - name: Install project dependencies and browser
+        run: task install:ci
 
-      - name: Build deployment site
-        run: npm run build
+      - name: Run checks, browser tests, and build
+        run: task ci
+
+      - name: Upload Playwright traces on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-test-results
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Upload deployment site
         uses: actions/upload-artifact@v7

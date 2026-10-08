@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: form-${{ github.ref }}
+  group: repzena-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -55,7 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     concurrency:
-      group: form-pages-production
+      group: repzena-pages-production
       cancel-in-progress: false
     steps:
       - name: Download built site
@@ -66,20 +66,11 @@ jobs:
 
       - name: Check deployment configuration
         env:
-          PAGES_REPOSITORY: ${{ vars.PAGES_REPOSITORY }}
           PAGES_BRANCH: ${{ vars.PAGES_BRANCH || 'main' }}
           PAGES_DEPLOY_TOKEN: ${{ secrets.PAGES_DEPLOY_TOKEN }}
         run: |
-          if [[ ! "$PAGES_REPOSITORY" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
-            echo "Set the PAGES_REPOSITORY Actions variable to owner/repository (for example, my-org/my-org.github.io)." >&2
-            exit 1
-          fi
           if [[ -z "$PAGES_DEPLOY_TOKEN" ]]; then
-            echo "Set the PAGES_DEPLOY_TOKEN Actions secret with write access to the Pages repository." >&2
-            exit 1
-          fi
-          if [[ "$PAGES_REPOSITORY" == "$GITHUB_REPOSITORY" ]]; then
-            echo "PAGES_REPOSITORY must be different from the source repository." >&2
+            echo "Set the PAGES_DEPLOY_TOKEN Actions secret with write access to repzena/repzena.github.io." >&2
             exit 1
           fi
           if ! git check-ref-format --branch "$PAGES_BRANCH" >/dev/null; then
@@ -90,7 +81,7 @@ jobs:
       - name: Check out Pages repository
         uses: actions/checkout@v7
         with:
-          repository: ${{ vars.PAGES_REPOSITORY }}
+          repository: repzena/repzena.github.io
           ref: ${{ vars.PAGES_BRANCH || 'main' }}
           token: ${{ secrets.PAGES_DEPLOY_TOKEN }}
           path: pages-repo

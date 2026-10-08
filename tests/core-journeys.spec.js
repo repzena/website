@@ -106,6 +106,73 @@ test('routine storage failures show an error and do not claim the exercise was s
   await expect(page.locator('#routine-items .routine-item')).toHaveCount(0);
 });
 
+test('failed routine edits restore names, sessions, removals, and order', async ({ page }) => {
+  await page.addInitScript((key) => {
+    const originalSetItem = Storage.prototype.setItem;
+    const seed = {
+      routines: [
+        {
+          id: 'routine-1',
+          name: 'Strength plan',
+          defaultName: false,
+          days: [
+            {
+              name: 'Push day',
+              defaultName: false,
+              items: [
+                {
+                  exerciseId: 'bench-press',
+                  name: 'Bench press',
+                  names: { en: 'Bench press', es: 'Press de banca' },
+                  sets: 3,
+                  reps: '8–12',
+                },
+                {
+                  exerciseId: 'row',
+                  name: 'Row',
+                  names: { en: 'Row', es: 'Remo' },
+                  sets: 3,
+                  reps: '8–12',
+                },
+              ],
+            },
+            { name: 'Pull day', defaultName: false, items: [] },
+          ],
+        },
+      ],
+      current: 'routine-1',
+    };
+    originalSetItem.call(localStorage, key, JSON.stringify(seed));
+    window.failRoutineWrites = true;
+    Storage.prototype.setItem = function (itemKey, value) {
+      if (window.failRoutineWrites && itemKey === key)
+        throw new DOMException('Storage is full', 'QuotaExceededError');
+      return originalSetItem.call(this, itemKey, value);
+    };
+  }, routineStorageKey);
+  await page.goto('/');
+
+  await page.locator('#routine-name').fill('Unsaved name');
+  await page.locator('#save-routine').click();
+  await expect(page.locator('#routine-name')).toHaveValue('Strength plan');
+
+  await page.locator('#add-day').click();
+  await expect(page.locator('#day-tabs [data-day]')).toHaveCount(2);
+  await expect(page.locator('#day-tabs [data-day="0"]')).toHaveAttribute('aria-pressed', 'true');
+
+  await page.locator('#routine-items [data-remove="0"]').click();
+  await expect(page.locator('#routine-items .routine-item')).toHaveCount(2);
+  await expect(page.locator('#routine-items .routine-item b')).toHaveText(['Bench press', 'Row']);
+
+  await page.locator('#routine-items [data-up="1"]').click();
+  await expect(page.locator('#routine-items .routine-item b')).toHaveText(['Bench press', 'Row']);
+
+  await page.reload();
+  await expect(page.locator('#routine-name')).toHaveValue('Strength plan');
+  await expect(page.locator('#day-tabs [data-day]')).toHaveCount(2);
+  await expect(page.locator('#routine-items .routine-item b')).toHaveText(['Bench press', 'Row']);
+});
+
 test('the cached exercise library remains available after going offline', async ({
   page,
   context,

@@ -21,6 +21,15 @@ const isLocalizedList = (value) =>
     (locale) =>
       Array.isArray(value[locale]) && value[locale].length > 0 && value[locale].every(isText),
   );
+const isLocalizedAliases = (value) =>
+  value &&
+  typeof value === 'object' &&
+  !Array.isArray(value) &&
+  locales.every(
+    (locale) =>
+      Array.isArray(value[locale]) &&
+      value[locale].every(isText),
+  );
 
 if (!Array.isArray(entries) || entries.length === 0) {
   throw new Error('Exercise data must be a non-empty JSON array.');
@@ -36,8 +45,30 @@ const taxonomy = {
     'hinge',
     'lunge',
     'core',
+    'mobility',
+    'elbow-flexion',
+    'elbow-extension',
+    'knee-flexion',
+    'knee-extension',
+    'ankle-plantar-flexion',
+    'shoulder-abduction',
+    'horizontal-adduction',
   ]),
-  equipment: new Set(['barbell', 'bench', 'rack', 'dumbbells', 'cable', 'machine', 'bodyweight']),
+  equipment: new Set([
+    'barbell',
+    'ez-bar',
+    'step',
+    'bench',
+    'rack',
+    'dumbbells',
+    'cable',
+    'machine',
+    'bodyweight',
+    'band',
+    'stick',
+    'pull-up-bar',
+    'ab-wheel',
+  ]),
   muscles: new Set([
     'chest',
     'triceps',
@@ -48,6 +79,10 @@ const taxonomy = {
     'glutes',
     'core',
     'hamstrings',
+    'calves',
+    'hip-flexors',
+    'obliques',
+    'adductors',
   ]),
 };
 entries.forEach((exercise, index) => {
@@ -61,6 +96,8 @@ entries.forEach((exercise, index) => {
   } else if (ids.has(exercise.id)) errors.push(`Duplicate exercise id: ${exercise.id}`);
   else ids.add(exercise.id);
   if (!isLocalizedText(exercise.name)) errors.push(`${at} needs en and es names.`);
+  if (exercise.aliases !== undefined && !isLocalizedAliases(exercise.aliases))
+    errors.push(`${at} aliases must have en and es lists of non-empty strings.`);
   for (const key of ['pattern', 'image', 'level', 'kind']) {
     if (!isText(exercise[key])) errors.push(`${at} needs ${key}.`);
   }

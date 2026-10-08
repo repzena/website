@@ -9,6 +9,7 @@ const browserGlobals = Object.fromEntries(
     'crypto',
     'document',
     'fetch',
+    'getComputedStyle',
     'history',
     'location',
     'localStorage',

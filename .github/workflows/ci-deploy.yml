@@ -67,10 +67,11 @@ jobs:
       - name: Check deployment configuration
         env:
           PAGES_BRANCH: ${{ vars.PAGES_BRANCH || 'main' }}
-          PAGES_DEPLOY_TOKEN: ${{ secrets.PAGES_DEPLOY_TOKEN }}
+          APP_ID: ${{ vars.APP_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
         run: |
-          if [[ -z "$PAGES_DEPLOY_TOKEN" ]]; then
-            echo "Set the PAGES_DEPLOY_TOKEN Actions secret with write access to repzena/repzena.github.io." >&2
+          if [[ -z "$APP_ID" || -z "$APP_PRIVATE_KEY" ]]; then
+            echo "Set the APP_ID Actions variable and APP_PRIVATE_KEY Actions secret for a GitHub App installed on repzena/repzena.github.io." >&2
             exit 1
           fi
           if ! git check-ref-format --branch "$PAGES_BRANCH" >/dev/null; then
@@ -78,26 +79,35 @@ jobs:
             exit 1
           fi
 
+      - name: Get App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: repzena.github.io
+
       - name: Check out Pages repository
         uses: actions/checkout@v7
         with:
-          repository: repzena/repzena.github.io
+          repository: ${{ github.repository_owner }}/repzena.github.io
           ref: ${{ vars.PAGES_BRANCH || 'main' }}
-          token: ${{ secrets.PAGES_DEPLOY_TOKEN }}
-          path: pages-repo
+          token: ${{ steps.app-token.outputs.token }}
+          path: pages
           fetch-depth: 1
 
       - name: Publish built site
         env:
           PAGES_BRANCH: ${{ vars.PAGES_BRANCH || 'main' }}
         run: |
-          rsync -a --delete --exclude='.git/' --exclude='CNAME' dist/ pages-repo/
-          git -C pages-repo config user.name "github-actions[bot]"
-          git -C pages-repo config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git -C pages-repo add --all
-          if git -C pages-repo diff --cached --quiet; then
+          rsync -a --delete --exclude='.git/' --exclude='CNAME' dist/ pages/
+          git -C pages config user.name "github-actions[bot]"
+          git -C pages config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C pages add --all
+          if git -C pages diff --cached --quiet; then
             echo "The Pages repository already has this build."
             exit 0
           fi
-          git -C pages-repo commit -m "Deploy ${GITHUB_REPOSITORY}@${GITHUB_SHA}"
-          git -C pages-repo push origin "HEAD:${PAGES_BRANCH}"
+          git -C pages commit -m "Deploy ${GITHUB_REPOSITORY}@${GITHUB_SHA}"
+          git -C pages push origin "HEAD:${PAGES_BRANCH}"

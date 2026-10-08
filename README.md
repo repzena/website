@@ -54,15 +54,15 @@ The preview tasks use Python 3's built-in HTTP server. Use `task preview` for th
 
 `.github/workflows/ci-deploy.yml` runs the lint/content checks and builds `dist/` for pull requests and pushes to `main`. It publishes only on pushes to `main` or a manual run started from `main`. Publishing copies the build to the root of a separate Pages repository and commits it to that repository's configured branch.
 
-For an organisation site, GitHub requires the Pages repository to be named `<organisation>.github.io` (not `<organisation>.github.com`). In the **source** repository, configure:
+The workflow publishes to [`repzena/repzena.github.io`](https://github.com/repzena/repzena.github.io). Create a GitHub App, install it on the `repzena` organisation with access to only `repzena.github.io`, and grant it **Contents: read and write** repository permission. In the **source** repository (`repzena/website`), configure:
 
-- Actions variable `PAGES_REPOSITORY`, for example `my-org/my-org.github.io`.
-- Optional Actions variable `PAGES_BRANCH` (defaults to `main`).
-- Actions secret `PAGES_DEPLOY_TOKEN`: a fine-grained personal access token restricted to the Pages repository, with **Contents: read and write** permission. The token is needed because the source repository's default `GITHUB_TOKEN` cannot write to a different repository.
+- Optional Actions variable `PAGES_BRANCH` if the Pages repository publishes from a branch other than `main`.
+- Actions variable `APP_ID`: the GitHub App's App ID.
+- Actions secret `APP_PRIVATE_KEY`: a private key generated for that GitHub App. The workflow mints a short-lived installation token scoped to `repzena/repzena.github.io`; the source repository's default `GITHUB_TOKEN` cannot write to a different repository.
 
-In the **Pages** repository, select **Settings → Pages → Deploy from a branch**, then choose the configured branch and `/ (root)` folder. The workflow preserves a root `CNAME` file if you configure a custom domain. The deployment repository is treated as generated output: files other than `.git` and `CNAME` are replaced by the built site on each deployment.
+In `repzena/repzena.github.io`, select **Settings → Pages → Deploy from a branch**, then choose the configured branch and `/ (root)` folder. The workflow preserves a root `CNAME` file if you configure a custom domain. The deployment repository is treated as generated output: files other than `.git` and `CNAME` are replaced by the built site on each deployment.
 
-The workflow uses the current major releases of the official checkout, Node setup, and artifact actions. Keep those action versions reviewed and updated as GitHub releases new majors.
+The workflow uses the current major releases of the official checkout, Node setup, artifact, and GitHub App token actions. Keep those action versions reviewed and updated as GitHub releases new majors.
 
 ## Build for GitHub Pages
 
@@ -74,4 +74,4 @@ task build
 
 The build validates the bilingual exercise data, assembles the site in a staging folder, then swaps it into `dist/`; it adds `.nojekyll` and publishes only the site entry point, styles, app script, public exercise data, and `assets/` when that directory exists. Personal routines and development files are not included. `dist/` is ignored by Git because GitHub Pages should receive it as a deployment artifact, not as committed source. The published page has no external font or runtime service dependency.
 
-The workflow transfers the built files to the configured Pages repository branch; it does not use GitHub's same-repository Pages artifact deployment. The project uses relative paths, so its assets work from the root of an organisation Pages site.
+The workflow transfers the built files to the Pages repository branch; it does not use GitHub's same-repository Pages artifact deployment. The project uses relative paths, so its assets work from the root of the organisation Pages site.

@@ -4,6 +4,8 @@ A mobile-first, bilingual static exercise guide with local routine editing. The 
 
 ## Run locally
 
+Use Node.js 24 LTS or later for the project tooling.
+
 The exercise catalog is loaded as JSON, so serve this folder over HTTP instead of opening `index.html` directly. For example:
 
 ```bash
@@ -57,7 +59,7 @@ The preview tasks use Python 3's built-in HTTP server. Use `task preview` for th
 The workflow publishes to [`repzena/repzena.github.io`](https://github.com/repzena/repzena.github.io). Create a GitHub App, install it on the `repzena` organisation with access to only `repzena.github.io`, and grant it **Contents: read and write** repository permission. In the **source** repository (`repzena/website`), configure:
 
 - Optional Actions variable `PAGES_BRANCH` if the Pages repository publishes from a branch other than `main`.
-- Actions variable `APP_ID`: the GitHub App's App ID.
+- Actions secret `APP_ID`: the GitHub App's App ID.
 - Actions secret `APP_PRIVATE_KEY`: a private key generated for that GitHub App. The workflow mints a short-lived installation token scoped to `repzena/repzena.github.io`; the source repository's default `GITHUB_TOKEN` cannot write to a different repository.
 
 In `repzena/repzena.github.io`, select **Settings → Pages → Deploy from a branch**, then choose the configured branch and `/ (root)` folder. The workflow preserves a root `CNAME` file if you configure a custom domain. The deployment repository is treated as generated output: files other than `.git` and `CNAME` are replaced by the built site on each deployment.

@@ -71,7 +71,7 @@ jobs:
           APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
         run: |
           if [[ -z "$APP_ID" || -z "$APP_PRIVATE_KEY" ]]; then
-            echo "Set the APP_ID Actions variable and APP_PRIVATE_KEY Actions secret for a GitHub App installed on repzena/repzena.github.io." >&2
+            echo "Set the APP_ID and APP_PRIVATE_KEY Actions secrets for a GitHub App installed on repzena/repzena.github.io." >&2
             exit 1
           fi
           if ! git check-ref-format --branch "$PAGES_BRANCH" >/dev/null; then

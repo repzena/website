@@ -250,3 +250,6 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/node,macos,git,windows,visualstudiocode,linux
+
+# Private routines and personal data
+/private-data/

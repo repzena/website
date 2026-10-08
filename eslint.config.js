@@ -9,8 +9,12 @@ const browserGlobals = Object.fromEntries(
     'crypto',
     'document',
     'fetch',
+    'history',
+    'location',
     'localStorage',
+    'navigator',
     'setTimeout',
+    'window',
   ].map((name) => [name, 'readonly']),
 );
 

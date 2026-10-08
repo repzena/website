@@ -74,6 +74,6 @@ Build the publishable static site into `dist/`:
 task build
 ```
 
-The build validates the bilingual exercise data, assembles the site in a staging folder, then swaps it into `dist/`; it adds `.nojekyll` and publishes only the site entry point, styles, app script, public exercise data, and `assets/` when that directory exists. Personal routines and development files are not included. `dist/` is ignored by Git because GitHub Pages should receive it as a deployment artifact, not as committed source. The published page has no external font or runtime service dependency.
+The build validates the bilingual exercise data, assembles the site in a staging folder, then swaps it into `dist/`; it adds `.nojekyll` and publishes only the site entry point, styles, app script, service worker, public exercise data, and `assets/` when that directory exists. Personal routines and development files are not included. `dist/` is ignored by Git because GitHub Pages should receive it as a deployment artifact, not as committed source. The published page has no external font or runtime service dependency. A service worker caches the page shell and exercise catalog for offline visits after the first successful load; the latest catalog is also retained in browser storage as a fallback.
 
 The workflow transfers the built files to the Pages repository branch; it does not use GitHub's same-repository Pages artifact deployment. The project uses relative paths, so its assets work from the root of the organisation Pages site.

@@ -11,8 +11,8 @@
     "lint:js": "eslint app.js",
     "lint:json": "node scripts/validate-data.mjs",
     "lint": "npm run lint:js && npm run lint:json && npm run format:check",
-    "format": "prettier --write index.html app.js styles.css data/exercises.json README.md AGENTS.md Taskfile.yml package.json eslint.config.js .prettierrc.json .github/workflows/ci-deploy.yml",
-    "format:check": "prettier --check index.html app.js styles.css data/exercises.json README.md AGENTS.md Taskfile.yml package.json eslint.config.js .prettierrc.json .github/workflows/ci-deploy.yml"
+    "format": "prettier --write index.html app.js service-worker.js styles.css data/exercises.json README.md AGENTS.md Taskfile.yml package.json eslint.config.js .prettierrc.json .github/workflows/ci-deploy.yml",
+    "format:check": "prettier --check index.html app.js service-worker.js styles.css data/exercises.json README.md AGENTS.md Taskfile.yml package.json eslint.config.js .prettierrc.json .github/workflows/ci-deploy.yml"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",

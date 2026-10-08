@@ -47,14 +47,16 @@ task preview                 # serves on http://localhost:8000
 task preview PORT=9000       # choose another port
 task preview:dist            # build, then serve dist/ at localhost:8000
 task lint                   # ESLint, JSON parse, and formatting checks
+task test                    # browser regression suite (Playwright Chromium)
+task ci                      # lint, browser tests, and production build
 task format                 # apply Prettier formatting
 ```
 
-The preview tasks use Python 3's built-in HTTP server. Use `task preview` for the source tree or `task preview:dist` to rebuild and preview the exact deployment output. Serve the site over HTTP rather than opening `index.html` directly: browser security blocks JavaScript modules and JSON fetches from `file://` URLs. Lint and formatting tools are development-only npm dependencies; they are not needed to publish or use the static site.
+The preview tasks use Python 3's built-in HTTP server. Use `task preview` for the source tree or `task preview:dist` to rebuild and preview the exact deployment output. Serve the site over HTTP rather than opening `index.html` directly: browser security blocks JavaScript modules and JSON fetches from `file://` URLs. Lint, formatting, and Playwright browser-test tools are development-only dependencies; they are not needed to publish or use the static site. `task install` also downloads Playwright Chromium for local browser tests. GitHub Actions uses the same `task ci` command after its Linux browser setup via `task install:ci`.
 
 ## GitHub Actions and a separate Pages repository
 
-`.github/workflows/ci-deploy.yml` runs the lint/content checks and builds `dist/` for pull requests and pushes to `main`. It publishes only on pushes to `main` or a manual run started from `main`. Publishing copies the build to the root of a separate Pages repository and commits it to that repository's configured branch.
+`.github/workflows/ci-deploy.yml` runs `task ci` for lint/content checks, browser regression tests, and the `dist/` build for pull requests and pushes to `main`. It publishes only on pushes to `main` or a manual run started from `main`. Publishing copies the build to the root of a separate Pages repository and commits it to that repository's configured branch.
 
 The workflow publishes to [`repzena/repzena.github.io`](https://github.com/repzena/repzena.github.io). Create a GitHub App, install it on the `repzena` organisation with access to only `repzena.github.io`, and grant it **Contents: read and write** repository permission. In the **source** repository (`repzena/website`), configure:
 

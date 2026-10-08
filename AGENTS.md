@@ -45,12 +45,14 @@
 
 ## Common commands
 
-- `task install` — install development tools.
+- `task install` — install project dependencies and Playwright Chromium locally.
+- `task install:ci` — install dependencies and browser system packages in CI.
+- `task test` — run the Playwright browser regression suite.
+- `task ci` — run lint, browser tests, and the production build in sequence.
 - `task preview` — serve the source tree locally at `http://localhost:8000`; use `task preview PORT=9000` to choose another port.
 - `task preview:dist` — build and serve the deployment output over HTTP.
 - `task lint` — run ESLint, parse the exercise JSON, and check formatting.
 - `task format` — format the source files.
 - `task build` — create the static deployment folder in `dist/`.
-- `npm run build` — run the same static build directly, including in CI.
 
 After changing source, run `task lint`. Run `task build` when the change affects what is published. Do not claim a check passed unless it was run successfully.

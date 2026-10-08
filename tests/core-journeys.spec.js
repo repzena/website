@@ -173,6 +173,26 @@ test('failed routine edits restore names, sessions, removals, and order', async 
   await expect(page.locator('#routine-items .routine-item b')).toHaveText(['Bench press', 'Row']);
 });
 
+test('theme selection persists and system mode follows device appearance', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'light' });
+  await page.goto('/');
+  await expect(page.locator('#theme')).toHaveValue('system');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await page.locator('#theme').selectOption('light');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+  await page.reload();
+  await expect(page.locator('#theme')).toHaveValue('light');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+
+  await page.locator('#theme').selectOption('system');
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await page.emulateMedia({ colorScheme: 'light' });
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
+});
+
 test('the cached exercise library remains available after going offline', async ({
   page,
   context,

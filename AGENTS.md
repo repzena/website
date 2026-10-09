@@ -16,8 +16,10 @@
 - `index.html` — page structure and primary inline illustration.
 - `styles.css` — responsive layout, colors, and component styles.
 - `app.js` — language strings, exercise rendering/search/filtering, detail views, and routine behavior. It keeps a validated catalogue copy in browser storage for offline fallback.
+- `theme.js` — early theme preference bootstrap, loaded externally so the page can enforce a Content Security Policy without inline JavaScript.
 - `data/exercises.json` — public exercise catalog; each exercise has a stable ID, localized names, instructions and cues, tags, and illustration key.
 - `service-worker.js` — caches the static page shell and catalogue for offline visits; keep its cache versioned when cache contents or behaviour change.
+- `robots.txt` and `sitemap.xml` — public crawler guidance and the homepage sitemap, copied into the deployable site by the build.
 - `assets/` — local public assets, when needed. Use original or appropriately licensed files.
 - `private-data/` — personal routines and other private local content. It is ignored by Git; do not publish or copy its contents into the public catalog or build.
 - `scripts/build.mjs` — builds the deployable site by copying an explicit allowlist into `dist/`.

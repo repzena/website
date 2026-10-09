@@ -3,6 +3,30 @@ import { test, expect } from '@playwright/test';
 
 const routineStorageKey = 'form-routines-v1';
 
+test('content security policy allows the app and blocks injected inline scripts', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(page.locator('.exercise-card').first()).toBeVisible();
+  await expect(page.locator('#theme')).toHaveValue('system');
+
+  const policy = await page
+    .locator('meta[http-equiv="Content-Security-Policy"]')
+    .getAttribute('content');
+  const scriptPolicy = policy
+    .split(';')
+    .map((directive) => directive.trim())
+    .find((directive) => directive.startsWith('script-src '));
+  expect(scriptPolicy).toBe("script-src 'self'");
+
+  await page.evaluate(() => {
+    const script = document.createElement('script');
+    script.textContent = 'document.documentElement.dataset.injected = "yes";';
+    document.head.append(script);
+  });
+  await expect(page.locator('html')).not.toHaveAttribute('data-injected', 'yes');
+});
+
 test('quick add stores an exercise in the selected routine and restores it after reload', async ({
   page,
 }) => {

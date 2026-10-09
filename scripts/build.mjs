@@ -7,7 +7,16 @@ await import('./validate-data.mjs');
 const distDir = path.join(projectRoot, 'dist');
 const stagingDir = path.join(projectRoot, '.dist-staging');
 const backupDir = path.join(projectRoot, '.dist-previous');
-const publicFiles = ['index.html', 'styles.css', 'app.js', 'service-worker.js', 'data'];
+const publicFiles = [
+  'index.html',
+  'styles.css',
+  'app.js',
+  'theme.js',
+  'service-worker.js',
+  'robots.txt',
+  'sitemap.xml',
+  'data',
+];
 
 await rm(stagingDir, { recursive: true, force: true });
 await mkdir(stagingDir, { recursive: true });

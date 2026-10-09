@@ -56,7 +56,7 @@ The preview tasks use Python 3's built-in HTTP server. Use `task preview` for th
 
 ## GitHub Actions and a separate Pages repository
 
-`.github/workflows/ci-deploy.yml` runs `task ci` for lint/content checks, browser regression tests, and the `dist/` build for pull requests and pushes to `main`. It publishes only on pushes to `main` or a manual run started from `main`. Publishing copies the build to the root of a separate Pages repository and commits it to that repository's configured branch.
+`.github/workflows/ci-deploy.yml` runs `task lint`, `task test`, and `task build` as separate steps for pull requests and pushes to `main`, making each result visible in the Actions run. It publishes only on pushes to `main` or a manual run started from `main`. Publishing copies the build to the root of a separate Pages repository and commits it to that repository's configured branch.
 
 The workflow publishes to [`repzena/repzena.github.io`](https://github.com/repzena/repzena.github.io). Create a GitHub App, install it on the `repzena` organisation with access to only `repzena.github.io`, and grant it **Contents: read and write** repository permission. In the **source** repository (`repzena/website`), configure:
 
@@ -79,3 +79,9 @@ task build
 The build validates the bilingual exercise data, assembles the site in a staging folder, then swaps it into `dist/`; it adds `.nojekyll` and publishes only the site entry point, styles, app script, service worker, public exercise data, and `assets/` when that directory exists. Personal routines and development files are not included. `dist/` is ignored by Git because GitHub Pages should receive it as a deployment artifact, not as committed source. The published page has no external font or runtime service dependency. Visitors can choose light, dark, or system appearance; the choice is stored in the browser. A service worker caches the page shell and exercise catalog for offline visits after the first successful load; the latest catalog is also retained in browser storage as a fallback.
 
 The workflow transfers the built files to the Pages repository branch; it does not use GitHub's same-repository Pages artifact deployment. The project uses relative paths, so its assets work from the root of the organisation Pages site.
+
+## Production security scan
+
+`.github/workflows/security-dast.yml` runs the OWASP ZAP Baseline Scan against `https://repzena.github.io/` daily at 00:00 UTC, after a successful run of the production deployment workflow on `main`, or manually through **Actions → OWASP ZAP baseline scan → Run workflow**. The workflow is read-only and does not create or update GitHub issues. ZAP attaches its scan report to the workflow run as the `zap-baseline-report` artifact. The workflow is configured to fail when ZAP reports alerts so they are visible as failed runs and can be investigated.
+
+The Baseline Scan performs a short crawl and passive checks; it does not perform active attacks. It is appropriate to run against the live site, but it is not a full security audit and can report findings that need human triage. ZAP and its GitHub Action are free and open source; GitHub Actions minutes are subject to the source repository's plan and usage limits. The action is pinned to its full release commit SHA; review and update that pin when adopting a newer release.

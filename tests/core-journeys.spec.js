@@ -13,8 +13,11 @@ test('content security policy allows the app and blocks injected inline scripts'
   const policy = await page
     .locator('meta[http-equiv="Content-Security-Policy"]')
     .getAttribute('content');
-  expect(policy).toContain("script-src 'self'");
-  expect(policy).not.toContain("'unsafe-inline'");
+  const scriptPolicy = policy
+    .split(';')
+    .map((directive) => directive.trim())
+    .find((directive) => directive.startsWith('script-src '));
+  expect(scriptPolicy).toBe("script-src 'self'");
 
   await page.evaluate(() => {
     const script = document.createElement('script');

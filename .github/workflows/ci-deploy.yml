@@ -36,8 +36,14 @@ jobs:
       - name: Install project dependencies and browser
         run: task install:ci
 
-      - name: Run checks, browser tests, and build
-        run: task ci
+      - name: Verify formatting, code, and exercise data
+        run: task lint
+
+      - name: Run browser regression tests
+        run: task test
+
+      - name: Build deployment site
+        run: task build
 
       - name: Upload Playwright traces on failure
         if: failure()

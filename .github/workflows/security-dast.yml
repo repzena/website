@@ -1,0 +1,35 @@
+name: OWASP ZAP baseline scan
+
+on:
+  schedule:
+    # GitHub schedules use UTC and may be delayed during busy periods.
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+  workflow_run:
+    workflows: ['CI and GitHub Pages deployment']
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: repzena-zap-production
+  cancel-in-progress: false
+
+jobs:
+  zap-scan:
+    name: Scan production with ZAP Baseline
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Run OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@de8ad967d3548d44ef623df22cf95c3b0baf8b25 # v0.15.0
+        with:
+          target: https://repzena.github.io/
+          fail_action: true
+          allow_issue_writing: false
+          artifact_name: zap-baseline-report

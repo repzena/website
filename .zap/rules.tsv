@@ -1,0 +1,12 @@
+# ZAP Baseline ignores for the GitHub Pages deployment at repzena.github.io.
+# GitHub Pages does not let this repository configure HTTP response headers.
+# These exceptions cover only host-level header/cache findings on public static files.
+10015	IGNORE	(Cache policy is controlled by GitHub Pages; all served files are public static assets with no personalised responses.)
+10020	IGNORE	(GitHub Pages does not allow X-Frame-Options response headers; frame-ancestors cannot be enforced by the page meta CSP.)
+10021	IGNORE	(X-Content-Type-Options is an HTTP response header controlled by GitHub Pages and cannot be set in static HTML.)
+10049	IGNORE	(The site serves only public static content; caching it does not expose account or routine data.)
+10050	IGNORE	(Static page assets are intentionally cacheable; user routines remain in browser storage and are not served by this site.)
+10055	IGNORE	(The meta CSP is present; this finding is for frame-ancestors, which browsers do not enforce from meta and GitHub Pages cannot set as a response header.)
+10063	IGNORE	(Permissions-Policy is an HTTP response header controlled by GitHub Pages and cannot be configured in this repository.)
+10098	IGNORE	(GitHub Pages serves public static files with permissive cross-origin access; the site has no authenticated server data and routines stay in local browser storage.)
+90004	IGNORE	(Cross-Origin-Embedder-Policy is an HTTP response header controlled by GitHub Pages; this static app does not require cross-origin isolation.)

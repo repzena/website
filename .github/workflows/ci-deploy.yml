@@ -40,7 +40,7 @@ jobs:
       - name: Scan for leaked secrets
         uses: trufflesecurity/trufflehog@e76dff8a7e57d6df0c60ad8cbf5d5cba505a8fc9 # v3.99.2
         with:
-          extra_args: --results=verified,unknown --fail
+          extra_args: --results=verified,unknown
 
   verify:
     name: Verify

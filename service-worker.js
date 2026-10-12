@@ -13,7 +13,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) => cache.addAll(CORE_FILES))
+      .then((cache) => cache.addAll(CORE_FILES).then(() => cache))
       .then(async (cache) => {
         const scopeUrl = new URL(self.registration.scope);
         const catalogResponse = await cache.match(new URL('./data/exercises.json', scopeUrl).href);

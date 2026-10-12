@@ -35,13 +35,15 @@ test('quick add stores an exercise in the selected routine and restores it after
   await expect(card).toBeVisible();
   const exerciseName = await card.locator('h3').innerText();
   await card.locator('[data-add]').click();
+  await expect(page.locator('#add-dialog')).toBeVisible();
+  await page.locator('#confirm-add-to-routine').click();
 
-  const routineItem = page.locator('#routine-items .routine-item');
+  const routineItem = page.locator('#routine-sections .routine-item');
   await expect(routineItem).toHaveCount(1);
   await expect(routineItem).toContainText(exerciseName);
   await page.reload();
-  await expect(page.locator('#routine-items .routine-item')).toHaveCount(1);
-  await expect(page.locator('#routine-items .routine-item')).toContainText(exerciseName);
+  await expect(page.locator('#routine-sections .routine-item')).toHaveCount(1);
+  await expect(page.locator('#routine-sections .routine-item')).toContainText(exerciseName);
 });
 
 test('pagination changes the visible exercise set', async ({ page }) => {
@@ -98,7 +100,7 @@ test('routine import and export preserve the routine and exercise data', async (
     buffer: Buffer.from(JSON.stringify(importedRoutine)),
   });
   await expect(page.locator('#routine-name')).toHaveValue('Imported test routine');
-  await expect(page.locator('#routine-items .routine-item')).toContainText('Bench press');
+  await expect(page.locator('#routine-sections .routine-item')).toContainText('Bench press');
 
   const downloadPromise = page.waitForEvent('download');
   await page.locator('#export-routine').click();
@@ -124,10 +126,11 @@ test('routine storage failures show an error and do not claim the exercise was s
   }, routineStorageKey);
   await page.goto('/');
   await page.locator('.exercise-card').first().locator('[data-add]').click();
+  await page.locator('#confirm-add-to-routine').click();
 
   await expect(page.locator('#toast')).toHaveClass(/visible/);
   await expect(page.locator('#toast')).toContainText('Could not save on this device');
-  await expect(page.locator('#routine-items .routine-item')).toHaveCount(0);
+  await expect(page.locator('#routine-sections .routine-item')).toHaveCount(0);
 });
 
 test('failed routine edits restore names, sessions, removals, and order', async ({ page }) => {
@@ -184,17 +187,26 @@ test('failed routine edits restore names, sessions, removals, and order', async 
   await expect(page.locator('#day-tabs [data-day]')).toHaveCount(2);
   await expect(page.locator('#day-tabs [data-day="0"]')).toHaveAttribute('aria-pressed', 'true');
 
-  await page.locator('#routine-items [data-remove="0"]').click();
-  await expect(page.locator('#routine-items .routine-item')).toHaveCount(2);
-  await expect(page.locator('#routine-items .routine-item b')).toHaveText(['Bench press', 'Row']);
+  await page.locator('#routine-sections [data-remove-item="0"]').click();
+  await expect(page.locator('#routine-sections .routine-item')).toHaveCount(2);
+  await expect(page.locator('#routine-sections .routine-item b')).toHaveText([
+    'Bench press',
+    'Row',
+  ]);
 
-  await page.locator('#routine-items [data-up="1"]').click();
-  await expect(page.locator('#routine-items .routine-item b')).toHaveText(['Bench press', 'Row']);
+  await page.locator('#routine-sections [data-item-up="1"]').click();
+  await expect(page.locator('#routine-sections .routine-item b')).toHaveText([
+    'Bench press',
+    'Row',
+  ]);
 
   await page.reload();
   await expect(page.locator('#routine-name')).toHaveValue('Strength plan');
   await expect(page.locator('#day-tabs [data-day]')).toHaveCount(2);
-  await expect(page.locator('#routine-items .routine-item b')).toHaveText(['Bench press', 'Row']);
+  await expect(page.locator('#routine-sections .routine-item b')).toHaveText([
+    'Bench press',
+    'Row',
+  ]);
 });
 
 test('theme selection persists and system mode follows device appearance', async ({ page }) => {

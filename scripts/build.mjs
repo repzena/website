@@ -35,7 +35,13 @@ try {
   try {
     const assets = path.join(projectRoot, 'assets');
     if ((await stat(assets)).isDirectory()) {
-      await cp(assets, path.join(stagingDir, 'assets'), { recursive: true });
+      await cp(assets, path.join(stagingDir, 'assets'), {
+        recursive: true,
+        filter: (source) => {
+          const name = path.basename(source).toLowerCase();
+          return name !== '.ds_store' && !name.endsWith('.heic');
+        },
+      });
     }
   } catch (error) {
     if (error.code !== 'ENOENT') throw error;

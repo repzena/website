@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -25,11 +26,7 @@ const isLocalizedAliases = (value) =>
   value &&
   typeof value === 'object' &&
   !Array.isArray(value) &&
-  locales.every(
-    (locale) =>
-      Array.isArray(value[locale]) &&
-      value[locale].every(isText),
-  );
+  locales.every((locale) => Array.isArray(value[locale]) && value[locale].every(isText));
 
 if (!Array.isArray(entries) || entries.length === 0) {
   throw new Error('Exercise data must be a non-empty JSON array.');
@@ -116,9 +113,30 @@ entries.forEach((exercise, index) => {
     errors.push(`${at} has an unsafe image style key.`);
   if (isText(exercise.level) && !['beginner', 'intermediate', 'advanced'].includes(exercise.level))
     errors.push(`${at} uses an unknown level: ${exercise.level}.`);
+  if (exercise.images !== undefined) {
+    if (!Array.isArray(exercise.images) || exercise.images.length === 0) {
+      errors.push(`${at} images must be a non-empty list when provided.`);
+    } else {
+      for (const [imageIndex, image] of exercise.images.entries()) {
+        const imageAt = `${at} image ${imageIndex + 1}`;
+        const safeSource =
+          typeof image?.src === 'string' &&
+          /^\.\/assets\/[a-zA-Z0-9/_-]+\.(?:webp|png|jpe?g)$/i.test(image.src) &&
+          !image.src.split('/').includes('..');
+        if (!safeSource) errors.push(`${imageAt} needs a safe local WebP, PNG, or JPEG path.`);
+        else if (!existsSync(path.join(root, image.src.slice(2))))
+          errors.push(`${imageAt} file does not exist: ${image.src}.`);
+        if (!isLocalizedText(image?.alt)) errors.push(`${imageAt} needs en and es alt text.`);
+      }
+    }
+  }
   for (const key of ['equipment', 'primaryMuscles', 'secondaryMuscles', 'focus']) {
     const required = !['primaryMuscles', 'secondaryMuscles'].includes(key);
-    if (!Array.isArray(exercise[key]) || (required && !exercise[key].length) || !exercise[key].every(isText)) {
+    if (
+      !Array.isArray(exercise[key]) ||
+      (required && !exercise[key].length) ||
+      !exercise[key].every(isText)
+    ) {
       errors.push(`${at} needs a valid ${key} list.`);
     } else
       for (const id of exercise[key]) {

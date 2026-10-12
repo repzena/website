@@ -116,6 +116,30 @@ test('the whole exercise card opens its guide and the routine exercise link does
   await page.locator('#confirm-add-to-routine').click();
   await page.locator('#routine-sections [data-routine-detail]').click();
   await expect(page.locator('#exercise-dialog h2')).toHaveText(exerciseName);
+  await page.locator('#dialog-close').click();
+  await expect(page.locator('#exercise-dialog')).toBeHidden();
+  await expect(page.locator('#routine-sections .routine-item')).toHaveCount(1);
+});
+
+test('legacy routine items can open guides by matching their exercise name', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#routine-file').setInputFiles({
+    name: 'legacy-routine.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(
+      JSON.stringify({
+        days: [
+          {
+            exercises: [{ name: 'Romanian deadlift', exercise_id: 'old-exercise-id', sets: 3 }],
+          },
+        ],
+      }),
+    ),
+  });
+  const rowButton = page.locator('#routine-sections [data-routine-detail="romanian-deadlift"]');
+  await expect(rowButton).toBeVisible();
+  await rowButton.click();
+  await expect(page.locator('#exercise-dialog h2')).toHaveText('Romanian deadlift');
 });
 
 test('routine sections are optional, and the starter layout can be added on demand', async ({

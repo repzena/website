@@ -355,6 +355,23 @@ const STORAGE_KEY = 'form-routines-v1';
 const LANGUAGE_KEY = 'form-language';
 const THEME_KEY = 'repzena-theme';
 const MAX_IMPORT_BYTES = 2 * 1024 * 1024;
+const SECTION_TYPES = [
+  'mobility',
+  'core',
+  'main-work',
+  'accessories',
+  'finisher',
+  'cooldown',
+  'custom',
+];
+const SECTION_LABEL_KEYS = {
+  mobility: 'sectionMobility',
+  core: 'sectionCore',
+  'main-work': 'sectionMain',
+  accessories: 'sectionAccessories',
+  finisher: 'sectionFinisher',
+  cooldown: 'sectionCooldown',
+};
 function readStorage(key) {
   try {
     return localStorage.getItem(key);
@@ -378,23 +395,6 @@ let selectedSectionId = null;
 let editingSectionId = null;
 const collapsedSectionIds = new Set();
 let toastTimer;
-const SECTION_TYPES = [
-  'mobility',
-  'core',
-  'main-work',
-  'accessories',
-  'finisher',
-  'cooldown',
-  'custom',
-];
-const SECTION_LABEL_KEYS = {
-  mobility: 'sectionMobility',
-  core: 'sectionCore',
-  'main-work': 'sectionMain',
-  accessories: 'sectionAccessories',
-  finisher: 'sectionFinisher',
-  cooldown: 'sectionCooldown',
-};
 function makeSection(type = 'main-work', name = '', items = []) {
   return {
     id: crypto.randomUUID(),

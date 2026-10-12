@@ -44,8 +44,17 @@ const taxonomy = {
     'squat',
     'hinge',
     'lunge',
-    'core',
-    'mobility',
+    'hip-rotation',
+    'spinal-flexion',
+    'shoulder-flexion',
+    'trunk-rotation',
+    'ankle-circles',
+    'isometric-stability',
+    'lateral-stability',
+    'knee-drive',
+    'trunk-flexion',
+    'anti-extension',
+    'anti-rotation',
     'elbow-flexion',
     'elbow-extension',
     'knee-flexion',
@@ -77,13 +86,13 @@ const taxonomy = {
     'biceps',
     'quads',
     'glutes',
-    'core',
     'hamstrings',
     'calves',
     'hip-flexors',
     'obliques',
     'adductors',
   ]),
+  focus: new Set(['strength', 'conditioning', 'mobility', 'core']),
 };
 entries.forEach((exercise, index) => {
   const at = `Exercise ${index + 1}`;
@@ -98,7 +107,7 @@ entries.forEach((exercise, index) => {
   if (!isLocalizedText(exercise.name)) errors.push(`${at} needs en and es names.`);
   if (exercise.aliases !== undefined && !isLocalizedAliases(exercise.aliases))
     errors.push(`${at} aliases must have en and es lists of non-empty strings.`);
-  for (const key of ['pattern', 'image', 'level', 'kind']) {
+  for (const key of ['pattern', 'image', 'level']) {
     if (!isText(exercise[key])) errors.push(`${at} needs ${key}.`);
   }
   if (isText(exercise.pattern) && !taxonomy.pattern.has(exercise.pattern))
@@ -107,13 +116,19 @@ entries.forEach((exercise, index) => {
     errors.push(`${at} has an unsafe image style key.`);
   if (isText(exercise.level) && !['beginner', 'intermediate', 'advanced'].includes(exercise.level))
     errors.push(`${at} uses an unknown level: ${exercise.level}.`);
-  for (const key of ['equipment', 'muscles']) {
-    if (!Array.isArray(exercise[key]) || !exercise[key].length || !exercise[key].every(isText)) {
-      errors.push(`${at} needs a non-empty ${key} list.`);
+  for (const key of ['equipment', 'primaryMuscles', 'secondaryMuscles', 'focus']) {
+    const required = !['primaryMuscles', 'secondaryMuscles'].includes(key);
+    if (!Array.isArray(exercise[key]) || (required && !exercise[key].length) || !exercise[key].every(isText)) {
+      errors.push(`${at} needs a valid ${key} list.`);
     } else
       for (const id of exercise[key]) {
-        if (!taxonomy[key].has(id)) errors.push(`${at} uses an unknown ${key} tag: ${id}.`);
+        const category = key === 'primaryMuscles' || key === 'secondaryMuscles' ? 'muscles' : key;
+        if (!taxonomy[category].has(id)) errors.push(`${at} uses an unknown ${key} tag: ${id}.`);
       }
+  }
+  if (Array.isArray(exercise.primaryMuscles) && Array.isArray(exercise.secondaryMuscles)) {
+    const overlap = exercise.primaryMuscles.some((id) => exercise.secondaryMuscles.includes(id));
+    if (overlap) errors.push(`${at} repeats a muscle as both primary and secondary.`);
   }
   if (!isLocalizedList(exercise.how))
     errors.push(`${at} needs at least one instruction in en and es.`);

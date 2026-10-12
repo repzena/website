@@ -1194,6 +1194,9 @@ a {
   font-size: 13px;
   font-weight: 600;
 }
+.section-target[hidden] {
+  display: none;
+}
 .section-target select {
   appearance: none;
   width: 100%;

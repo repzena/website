@@ -541,21 +541,46 @@ test('exercise image opens an enlarged viewer with accessible multi-image contro
   await page.route('**/data/exercises.json', (route) =>
     route.fulfill({ contentType: 'application/json', body: JSON.stringify(catalog) }),
   );
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await page.locator('#search').fill('Arnold press');
+  const card = page.locator('.exercise-card').filter({
+    has: page.locator('[data-detail="arnold-press"]'),
+  });
+  const thumbnail = card.locator('.exercise-photo-art img');
+  await expect(thumbnail).toHaveCSS('object-fit', 'cover');
+  await expect(thumbnail).toHaveCSS('object-position', '50% 50%');
   await page.locator('[data-detail="arnold-press"]').click();
-  await expect(page.locator('#dialog-content .gallery-dot')).toHaveCount(2);
-  await page.locator('#dialog-content .gallery-dot').nth(1).click();
-  await expect(page.locator('#dialog-content .gallery-dot').nth(1)).toHaveAttribute(
-    'aria-pressed',
-    'true',
+  const guideGallery = page.locator('#dialog-content [data-exercise-gallery]');
+  await expect(guideGallery.locator('.gallery-dot')).toHaveCount(2);
+  await expect(guideGallery.locator('[data-gallery-prev]')).toBeVisible();
+  await expect(guideGallery.locator('[data-gallery-next]')).toBeVisible();
+  await guideGallery.locator('[data-gallery-next]').click();
+  await expect(guideGallery.locator('.gallery-image')).toHaveAttribute(
+    'alt',
+    'Arnold press second position',
   );
+  await guideGallery.locator('[data-gallery-prev]').click();
+  await expect(guideGallery.locator('.gallery-dot').nth(0)).toHaveAttribute('aria-pressed', 'true');
+  await guideGallery.locator('.gallery-dot').nth(1).click();
   await page.locator('#dialog-content [data-gallery-enlarge]').click();
   await expect(page.locator('#image-viewer')).toBeVisible();
   await expect(page.locator('#image-viewer .gallery-dot')).toHaveCount(2);
+  await expect(page.locator('#image-viewer [data-viewer-prev]')).toBeVisible();
+  await expect(page.locator('#image-viewer [data-viewer-next]')).toBeVisible();
   await expect(page.locator('#image-viewer .gallery-image')).toHaveAttribute(
     'alt',
     'Arnold press second position',
+  );
+  await page.locator('#image-viewer [data-viewer-next]').click();
+  await expect(page.locator('#image-viewer .gallery-dot').nth(0)).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await page.locator('#image-viewer [data-viewer-prev]').click();
+  await expect(page.locator('#image-viewer .gallery-dot').nth(1)).toHaveAttribute(
+    'aria-pressed',
+    'true',
   );
   await page.locator('#image-viewer [data-viewer-close]').click();
   await expect(page.locator('#image-viewer')).toBeHidden();

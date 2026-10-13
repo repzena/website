@@ -124,8 +124,12 @@ entries.forEach((exercise, index) => {
           /^\.\/assets\/[a-zA-Z0-9/_-]+\.(?:webp|png|jpe?g)$/i.test(image.src) &&
           !image.src.split('/').includes('..');
         if (!safeSource) errors.push(`${imageAt} needs a safe local WebP, PNG, or JPEG path.`);
-        else if (!existsSync(path.join(root, image.src.slice(2))))
-          errors.push(`${imageAt} file does not exist: ${image.src}.`);
+        else {
+          if (image.src.split('/')[2] !== exercise.id)
+            errors.push(`${imageAt} must be stored in ./assets/${exercise.id}/.`);
+          if (!existsSync(path.join(root, image.src.slice(2))))
+            errors.push(`${imageAt} file does not exist: ${image.src}.`);
+        }
         if (!isLocalizedText(image?.alt)) errors.push(`${imageAt} needs en and es alt text.`);
       }
     }

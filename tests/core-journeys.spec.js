@@ -142,6 +142,102 @@ test('legacy routine items can open guides by matching their exercise name', asy
   await expect(page.locator('#exercise-dialog h2')).toHaveText('Romanian deadlift');
 });
 
+test('routine section titles and guides resolve from stable catalogue exercise IDs', async ({
+  page,
+}) => {
+  await page.addInitScript((key) => {
+    localStorage.setItem(
+      key,
+      JSON.stringify({
+        routines: [
+          {
+            id: 'routine-stable-id',
+            name: 'Strength plan',
+            defaultName: false,
+            days: [
+              {
+                name: 'Leg day',
+                defaultName: false,
+                items: [],
+                sections: [
+                  {
+                    id: 'section-stable-id',
+                    type: 'main-work',
+                    name: '',
+                    items: [
+                      {
+                        exerciseId: 'old-deadlift-id',
+                        name: 'Old exercise title',
+                        names: { en: 'Old exercise title', es: 'Peso muerto rumano' },
+                        sets: 3,
+                        reps: '8–12',
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        current: 'routine-stable-id',
+      }),
+    );
+  }, routineStorageKey);
+  await page.goto('/');
+
+  const exerciseButton = page.locator(
+    '#routine-sections [data-routine-detail="romanian-deadlift"]',
+  );
+  await expect(exerciseButton).toBeVisible();
+  await expect(exerciseButton.locator('.item-info b')).toHaveText('Romanian deadlift');
+
+  const savedItem = await page.evaluate((key) => {
+    const state = JSON.parse(localStorage.getItem(key));
+    return state.routines[0].days[0].sections[0].items[0];
+  }, routineStorageKey);
+  expect(savedItem).toMatchObject({
+    exerciseId: 'romanian-deadlift',
+    name: 'Romanian deadlift',
+    names: { en: 'Romanian deadlift', es: 'Peso muerto rumano' },
+  });
+
+  await exerciseButton.click();
+  await expect(page.locator('#exercise-dialog h2')).toHaveText('Romanian deadlift');
+});
+
+test('unmatched routine items can be linked once and then open their guide directly', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.locator('#routine-file').setInputFiles({
+    name: 'unmatched-routine.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(
+      JSON.stringify({
+        days: [
+          {
+            exercises: [{ name: 'Deadlift from coach notes', exercise_id: 'legacy-xyz', sets: 3 }],
+          },
+        ],
+      }),
+    ),
+  });
+
+  const unmatchedButton = page.locator('#routine-sections [data-routine-match]');
+  await expect(unmatchedButton).toBeVisible();
+  await unmatchedButton.click();
+  await expect(page.locator('#exercise-dialog h2')).toHaveText('Deadlift from coach notes');
+  await page.locator('#routine-guide-match-select').selectOption('romanian-deadlift');
+  await page.locator('[data-open-matched-guide]').click();
+  await expect(page.locator('#exercise-dialog h2')).toHaveText('Romanian deadlift');
+
+  const linkedButton = page.locator('#routine-sections [data-routine-detail="romanian-deadlift"]');
+  await expect(linkedButton).toBeVisible();
+  await page.locator('#dialog-close').click();
+  await linkedButton.click();
+  await expect(page.locator('#exercise-dialog h2')).toHaveText('Romanian deadlift');
+});
+
 test('routine sections are optional, and the starter layout can be added on demand', async ({
   page,
 }) => {
@@ -240,7 +336,9 @@ test('routine import and export preserve the routine and exercise data', async (
     buffer: Buffer.from(JSON.stringify(importedRoutine)),
   });
   await expect(page.locator('#routine-name')).toHaveValue('Imported test routine');
-  await expect(page.locator('#routine-sections .routine-item')).toContainText('Bench press');
+  await expect(page.locator('#routine-sections .routine-item')).toContainText(
+    'Barbell bench press',
+  );
 
   const downloadPromise = page.waitForEvent('download');
   await page.locator('#export-routine').click();
@@ -249,6 +347,7 @@ test('routine import and export preserve the routine and exercise data', async (
   const exported = JSON.parse(await readFile(await download.path(), 'utf8'));
   expect(exported.routine.name.en).toBe('Imported test routine');
   expect(exported.routine.days[0].exercises[0]).toMatchObject({
+    name: { en: 'Barbell bench press', es: 'Press de banca con barra' },
     exercise_id: 'barbell-bench-press',
     sets: 4,
   });
@@ -460,6 +559,28 @@ test('exercise image opens an enlarged viewer with accessible multi-image contro
   );
   await page.locator('#image-viewer [data-viewer-close]').click();
   await expect(page.locator('#image-viewer')).toBeHidden();
+});
+
+test('prone Y-T-W exercise images display in their numbered order', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#search').fill('Prone Y-T-W');
+  await page.locator('[data-detail="prone-ytw"]').click();
+
+  const gallery = page.locator('#dialog-content [data-exercise-gallery]');
+  await expect(gallery.locator('.gallery-dot')).toHaveCount(4);
+  const orderedImages = [
+    '1-start-position.webp',
+    '2-y-position.webp',
+    '3-t-position.webp',
+    '4-w-position.webp',
+  ];
+  for (const [index, imageName] of orderedImages.entries()) {
+    await gallery.locator('.gallery-dot').nth(index).click();
+    await expect(gallery.locator('.gallery-image')).toHaveAttribute('src', new RegExp(imageName));
+    await expect
+      .poll(() => gallery.locator('.gallery-image').evaluate((image) => image.naturalWidth))
+      .toBeGreaterThan(0);
+  }
 });
 
 test('the cached exercise library remains available after going offline', async ({

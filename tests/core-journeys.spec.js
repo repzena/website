@@ -68,8 +68,32 @@ test('pagination changes the visible exercise set', async ({ page }) => {
 
   await page.getByRole('button', { name: 'Next page' }).click();
 
-  await expect(status).toContainText('13–');
+  await expect(status).toContainText('9–');
   await expect(page.locator('.exercise-card h3').first()).not.toHaveText(firstExercise);
+});
+
+test('exercise page size follows the responsive grid across reloads and viewport changes', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/');
+  const status = page.locator('#pagination-status');
+  await expect(status).toHaveText('Showing 1–8 of 50');
+  await expect(page.locator('.exercise-card')).toHaveCount(8);
+
+  await page.setViewportSize({ width: 900, height: 900 });
+  await expect(status).toHaveText('Showing 1–6 of 50');
+  await expect(page.locator('.exercise-card')).toHaveCount(6);
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(status).toHaveText('Showing 1–4 of 50');
+  await expect(page.locator('.exercise-card')).toHaveCount(4);
+
+  await page.reload();
+  await expect(status).toHaveText('Showing 1–4 of 50');
+  await page.getByRole('button', { name: 'Next page' }).click();
+  await expect(status).toHaveText('Showing 5–8 of 50');
+  await expect(page.locator('.exercise-card')).toHaveCount(4);
 });
 
 test('search handles Spanish names without accents and combines library filters', async ({
@@ -90,6 +114,23 @@ test('search handles Spanish names without accents and combines library filters'
   await page.locator('#active-filters [data-clear="muscle-filter"]').click();
   await expect(page.locator('#muscle-filter')).toHaveValue('');
   await expect(page.locator('#active-filters .filter-chip')).toHaveCount(1);
+});
+
+test('focus filter applies and clears through its dropdown and active chip', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#focus-filter').selectOption('strength');
+  await expect(page.locator('#active-filters .filter-chip')).toHaveCount(1);
+  await expect(page.locator('#active-filters .filter-chip')).toHaveText('Strength ×');
+  await expect(page.locator('#result-count')).not.toHaveText('50 MOVES');
+
+  await page.locator('#focus-filter').selectOption('');
+  await expect(page.locator('#active-filters .filter-chip')).toHaveCount(0);
+  await expect(page.locator('#result-count')).toHaveText('50 MOVES');
+
+  await page.locator('#focus-filter').selectOption('mobility');
+  await page.locator('#active-filters [data-clear="focus-filter"]').click();
+  await expect(page.locator('#focus-filter')).toHaveValue('');
+  await expect(page.locator('#result-count')).toHaveText('50 MOVES');
 });
 
 test('exercise guide URLs reopen the bookmarked guide', async ({ page }) => {
@@ -208,6 +249,81 @@ test('routine section titles and guides resolve from stable catalogue exercise I
 
   await exerciseButton.click();
   await expect(page.locator('#exercise-dialog h2')).toHaveText('Romanian deadlift');
+});
+
+test('routine exercise sets and reps can be edited and remain saved after reload', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.locator('.exercise-card').first().locator('[data-add]').click();
+  await page.locator('#confirm-add-to-routine').click();
+
+  const item = page.locator('#routine-sections .routine-item').first();
+  await item.locator('[data-edit-item]').click();
+  await item.locator('[data-edit-sets]').fill('4');
+  await item.locator('[data-edit-reps]').fill('6–8');
+  await item.locator('[data-save-item]').click();
+  await expect(page.locator('#routine-sections .routine-item').first()).toContainText(
+    '4 sets  ·  6–8',
+  );
+
+  await page.reload();
+  await expect(page.locator('#routine-sections .routine-item').first()).toContainText(
+    '4 sets  ·  6–8',
+  );
+});
+
+test('routine and session removal confirm, update selection, and preserve one of each', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(page.locator('#remove-routine')).toBeDisabled();
+  await expect(page.locator('#day-tabs [data-remove-day]')).toBeDisabled();
+
+  await page.locator('#add-day').click();
+  await page.locator('#add-exercise').selectOption('barbell-bench-press');
+  await page.locator('#add-exercise-button').click();
+  await expect(page.locator('#routine-sections .routine-item')).toHaveCount(1);
+  page.once('dialog', (dialog) => dialog.dismiss());
+  await page.locator('#day-tabs [data-remove-day="1"]').click();
+  await expect(page.locator('#day-tabs [data-day]')).toHaveCount(2);
+  await expect(page.locator('#routine-sections .routine-item')).toHaveCount(1);
+  page.once('dialog', (dialog) => dialog.accept());
+  await page.locator('#day-tabs [data-remove-day="1"]').click();
+  await expect(page.locator('#day-tabs [data-day]')).toHaveCount(1);
+  await expect(page.locator('#routine-sections .routine-item')).toHaveCount(0);
+  await expect(page.locator('#day-tabs [data-remove-day]')).toBeDisabled();
+
+  await page.locator('#new-routine').click();
+  await expect(page.locator('#routine-select option')).toHaveCount(2);
+  await expect(page.locator('#remove-routine')).toBeEnabled();
+  await page.locator('#add-day').click();
+  await page.locator('#add-exercise').selectOption('barbell-bench-press');
+  await page.locator('#add-exercise-button').click();
+  page.once('dialog', (dialog) => dialog.dismiss());
+  await page.locator('#remove-routine').click();
+  await expect(page.locator('#routine-select option')).toHaveCount(2);
+  await expect(page.locator('#routine-sections .routine-item')).toHaveCount(1);
+  page.once('dialog', (dialog) => dialog.accept());
+  await page.locator('#remove-routine').click();
+
+  await expect(page.locator('#routine-select option')).toHaveCount(1);
+  await expect(page.locator('#routine-name')).toHaveValue('My routine');
+  await expect(page.locator('#day-tabs [data-day]')).toHaveCount(1);
+  await expect(page.locator('#routine-sections .routine-item')).toHaveCount(0);
+  await expect(page.locator('#remove-routine')).toBeDisabled();
+});
+
+test('exercise guide omits the primary-muscle field when the catalogue has no value', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.locator('#search').fill('Forearm plank');
+  await page.locator('[data-detail="plank"]').click();
+  await expect(page.locator('#exercise-dialog')).toBeVisible();
+  await expect(page.locator('#exercise-dialog .detail-facts')).not.toContainText('Primary muscle');
+  await expect(page.locator('#exercise-dialog .detail-facts')).toContainText('Secondary muscles');
+  await expect(page.locator('#exercise-dialog .detail-facts')).not.toContainText('—');
 });
 
 test('unmatched routine items can be linked once and then open their guide directly', async ({
@@ -361,12 +477,17 @@ test('routine import and export preserve the routine and exercise data', async (
 test('routine import treats names as text and rejects malformed data safely', async ({ page }) => {
   await page.goto('/');
   const hostileName = '<img src=x onerror="window.injected = true">';
+  const hostileReps = '"><img src=x onerror="window.injected = true">';
   await page.locator('#routine-file').setInputFiles({
     name: 'untrusted-routine.json',
     mimeType: 'application/json',
     buffer: Buffer.from(
       JSON.stringify({
-        days: [{ exercises: [{ name: { en: hostileName }, sets: 3 }] }],
+        days: [
+          {
+            exercises: [{ name: { en: hostileName }, sets: 3, reps_or_time: { en: hostileReps } }],
+          },
+        ],
       }),
     ),
   });
@@ -375,6 +496,11 @@ test('routine import treats names as text and rejects malformed data safely', as
     hostileName,
   );
   expect(await page.evaluate(() => window.injected)).toBeUndefined();
+  await page.locator('#routine-sections [data-edit-item]').click();
+  await expect(page.locator('[data-edit-reps]')).toHaveValue(hostileReps);
+  await expect(page.locator('#routine-sections img')).toHaveCount(0);
+  expect(await page.evaluate(() => window.injected)).toBeUndefined();
+  await page.locator('[data-cancel-item]').click();
 
   await page.locator('#routine-file').setInputFiles({
     name: 'broken.json',

@@ -336,7 +336,9 @@ test('routine import and export preserve the routine and exercise data', async (
     buffer: Buffer.from(JSON.stringify(importedRoutine)),
   });
   await expect(page.locator('#routine-name')).toHaveValue('Imported test routine');
-  await expect(page.locator('#routine-sections .routine-item')).toContainText('Bench press');
+  await expect(page.locator('#routine-sections .routine-item')).toContainText(
+    'Barbell bench press',
+  );
 
   const downloadPromise = page.waitForEvent('download');
   await page.locator('#export-routine').click();
@@ -345,6 +347,7 @@ test('routine import and export preserve the routine and exercise data', async (
   const exported = JSON.parse(await readFile(await download.path(), 'utf8'));
   expect(exported.routine.name.en).toBe('Imported test routine');
   expect(exported.routine.days[0].exercises[0]).toMatchObject({
+    name: { en: 'Barbell bench press', es: 'Press de banca con barra' },
     exercise_id: 'barbell-bench-press',
     sets: 4,
   });

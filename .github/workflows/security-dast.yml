@@ -29,6 +29,15 @@ jobs:
       - name: Check out source and ZAP rules
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
+      - name: Wait for published pages to respond successfully
+        run: |
+          for url in https://repzena.github.io/ https://repzena.github.io/styles.css; do
+            echo "Checking $url"
+            curl --fail --silent --show-error --location \
+              --retry 5 --retry-all-errors --retry-delay 5 --retry-max-time 90 \
+              --max-time 20 "$url" --output /dev/null
+          done
+
       - name: Run OWASP ZAP Baseline Scan
         uses: zaproxy/action-baseline@de8ad967d3548d44ef623df22cf95c3b0baf8b25 # v0.15.0
         with:

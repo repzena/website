@@ -18,6 +18,11 @@ test('content security policy allows the app and blocks injected inline scripts'
   await page.goto('/');
   await expect(page.locator('.exercise-card').first()).toBeVisible();
   await expect(page.locator('#theme')).toHaveValue('system');
+  const favicon = page.locator('link[rel="icon"]');
+  await expect(favicon).toHaveAttribute('href', 'favicon.svg');
+  const faviconResponse = await page.request.get(new URL('favicon.svg', page.url()).toString());
+  expect(faviconResponse.status()).toBe(200);
+  expect(await faviconResponse.text()).toContain('<svg');
 
   const policy = await page
     .locator('meta[http-equiv="Content-Security-Policy"]')

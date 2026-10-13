@@ -10,3 +10,6 @@
 10063	IGNORE	(Permissions-Policy is an HTTP response header controlled by GitHub Pages and cannot be configured in this repository.)
 10098	IGNORE	(GitHub Pages serves public static files with permissive cross-origin access; the site has no authenticated server data and routines stay in local browser storage.)
 90004	IGNORE	(Cross-Origin-Embedder-Policy is an HTTP response header controlled by GitHub Pages; this static app does not require cross-origin isolation.)
+# The workflow preflights this asset; these two header checks skip only its URL so a transient GitHub Pages 503 response is not treated as an application response.
+10035	OUTOFSCOPE	^https://repzena\.github\.io/styles\.css$
+10038	OUTOFSCOPE	^https://repzena\.github\.io/styles\.css$

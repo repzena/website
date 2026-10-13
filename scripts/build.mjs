@@ -9,6 +9,7 @@ const stagingDir = path.join(projectRoot, '.dist-staging');
 const backupDir = path.join(projectRoot, '.dist-previous');
 const publicFiles = [
   'index.html',
+  'favicon.svg',
   'styles.css',
   'app.js',
   'theme.js',

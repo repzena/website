@@ -45,6 +45,13 @@
 - Use relative asset/data paths so the site works on GitHub Pages under a repository subpath.
 - Deploy `dist/` as the GitHub Pages artifact. Do not commit generated output unless the user specifically changes the deployment approach.
 
+## Running project commands
+
+- Use the Taskfile-defined task for project operations and checks instead of invoking the underlying `npm`, `node`, or `python` commands directly. Use `task --list` to find the available tasks.
+- Run `task test` after changing runtime behaviour or browser tests, and whenever the user asks to run the test suite. Do not replace it with the underlying npm script.
+- After source changes, run `task lint`; run `task build` when the change affects the published site.
+- If an operation does not have a suitable task, add one to `Taskfile.yml` and run it through `task`.
+
 ## Common commands
 
 - `task install` — install project dependencies and Playwright Chromium locally.

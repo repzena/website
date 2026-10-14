@@ -326,6 +326,46 @@ test('exercise guide omits the primary-muscle field when the catalogue has no va
   await expect(page.locator('#exercise-dialog .detail-facts')).not.toContainText('—');
 });
 
+test('newly added exercise illustrations appear in their guides in sequence', async ({ page }) => {
+  const illustratedExercises = [
+    {
+      id: 'lat-pulldown',
+      name: 'Lat pull-down',
+      images: ['1-start-position.jpeg', '2-end-position.jpeg'],
+    },
+    { id: 'plank', name: 'Forearm plank', images: ['plank.png'] },
+    {
+      id: 'reverse-crunch',
+      name: 'Reverse crunch',
+      images: ['1-start-position.jpeg', '2-mid-position.jpeg', '3-end-position.jpeg'],
+    },
+    {
+      id: 'rotational-lunge',
+      name: 'Lunge with rotation',
+      images: ['1-start-position.png', '2-lunge.png'],
+    },
+    { id: 'side-plank', name: 'Side plank', images: ['side-plank.png'] },
+    { id: 'walking-lunge', name: 'Walking lunge', images: ['1-start-position.png', '2-lunge.png'] },
+  ];
+  await page.goto('/');
+
+  for (const exercise of illustratedExercises) {
+    await page.locator('#search').fill(exercise.name);
+    await expect(page.locator('.exercise-card')).toHaveCount(1);
+    await page.locator(`[data-detail="${exercise.id}"]`).click();
+    const image = page.locator('#dialog-content .gallery-image');
+    await expect(image).toHaveAttribute('src', `./assets/${exercise.id}/${exercise.images[0]}`);
+    await expect(image).toHaveAttribute('alt', /.+/);
+
+    for (const imagePath of exercise.images.slice(1)) {
+      await page.locator('#dialog-content [data-gallery-next]').click();
+      await expect(image).toHaveAttribute('src', `./assets/${exercise.id}/${imagePath}`);
+      await expect(image).toHaveAttribute('alt', /.+/);
+    }
+    await page.locator('#dialog-close').click();
+  }
+});
+
 test('unmatched routine items can be linked once and then open their guide directly', async ({
   page,
 }) => {
@@ -725,10 +765,10 @@ test('prone Y-T-W exercise images display in their numbered order', async ({ pag
   const gallery = page.locator('#dialog-content [data-exercise-gallery]');
   await expect(gallery.locator('.gallery-dot')).toHaveCount(4);
   const orderedImages = [
-    '1-start-position.webp',
-    '2-y-position.webp',
-    '3-t-position.webp',
-    '4-w-position.webp',
+    '1-start-position.jpeg',
+    '2-y-position.jpeg',
+    '3-t-position.jpeg',
+    '4-w-position.jpeg',
   ];
   for (const [index, imageName] of orderedImages.entries()) {
     await gallery.locator('.gallery-dot').nth(index).click();

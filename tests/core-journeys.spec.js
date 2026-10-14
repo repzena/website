@@ -703,15 +703,6 @@ test('routine section controls stay usable at a narrow phone viewport', async ({
 test('exercise image opens an enlarged viewer with accessible multi-image controls', async ({
   page,
 }) => {
-  const catalog = JSON.parse(await readFile(new URL('../data/exercises.json', import.meta.url)));
-  const arnoldPress = catalog.find((exercise) => exercise.id === 'arnold-press');
-  arnoldPress.images.push({
-    ...arnoldPress.images[0],
-    alt: { en: 'Arnold press second position', es: 'Press Arnold segunda posición' },
-  });
-  await page.route('**/data/exercises.json', (route) =>
-    route.fulfill({ contentType: 'application/json', body: JSON.stringify(catalog) }),
-  );
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await page.locator('#search').fill('Arnold press');
@@ -729,7 +720,7 @@ test('exercise image opens an enlarged viewer with accessible multi-image contro
   await guideGallery.locator('[data-gallery-next]').click();
   await expect(guideGallery.locator('.gallery-image')).toHaveAttribute(
     'alt',
-    'Arnold press second position',
+    'Arnold press top position: both dumbbells pressed overhead with arms extended.',
   );
   await guideGallery.locator('[data-gallery-prev]').click();
   await expect(guideGallery.locator('.gallery-dot').nth(0)).toHaveAttribute('aria-pressed', 'true');
@@ -741,7 +732,7 @@ test('exercise image opens an enlarged viewer with accessible multi-image contro
   await expect(page.locator('#image-viewer [data-viewer-next]')).toBeVisible();
   await expect(page.locator('#image-viewer .gallery-image')).toHaveAttribute(
     'alt',
-    'Arnold press second position',
+    'Arnold press top position: both dumbbells pressed overhead with arms extended.',
   );
   await page.locator('#image-viewer [data-viewer-next]').click();
   await expect(page.locator('#image-viewer .gallery-dot').nth(0)).toHaveAttribute(

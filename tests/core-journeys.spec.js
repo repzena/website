@@ -710,7 +710,7 @@ test('exercise image opens an enlarged viewer with accessible multi-image contro
     has: page.locator('[data-detail="arnold-press"]'),
   });
   const thumbnail = card.locator('.exercise-photo-art img');
-  await expect(thumbnail).toHaveCSS('object-fit', 'cover');
+  await expect(thumbnail).toHaveCSS('object-fit', 'contain');
   await expect(thumbnail).toHaveCSS('object-position', '50% 50%');
   await page.locator('[data-detail="arnold-press"]').click();
   const guideGallery = page.locator('#dialog-content [data-exercise-gallery]');

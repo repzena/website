@@ -19,6 +19,6 @@
     "@eslint/js": "^10.0.0",
     "@playwright/test": "^1.64.0",
     "eslint": "^10.0.0",
-    "prettier": "^3.9.9"
+    "prettier": "^3.9.10"
   }
 }

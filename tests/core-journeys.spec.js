@@ -333,19 +333,44 @@ test('newly added exercise illustrations appear in their guides in sequence', as
       name: 'Lat pull-down',
       images: ['1-start-position.jpeg', '2-end-position.jpeg'],
     },
-    { id: 'plank', name: 'Forearm plank', images: ['plank.png'] },
+    {
+      id: 'barbell-bench-press',
+      name: 'Barbell bench press',
+      images: ['1-initial-position.jpeg', '2-final-position.jpeg'],
+    },
+    {
+      id: 'dumbbell-french-press',
+      name: 'Lying dumbbell triceps extension',
+      images: ['1-initial-position.jpeg', '2-final-position.jpeg'],
+    },
+    {
+      id: 'seated-cable-row-neutral',
+      name: 'Seated cable row',
+      images: ['1-start-position.jpeg', '2-start-position.jpeg'],
+    },
+    { id: 'plank', name: 'Forearm plank', images: ['plank.jpeg'] },
+    { id: 'high-plank', name: 'High plank', images: ['high-plank.jpeg'] },
+    { id: 'hollow-hold', name: 'Hollow hold', images: ['hollow-hold.jpeg'] },
     {
       id: 'reverse-crunch',
       name: 'Reverse crunch',
-      images: ['1-start-position.jpeg', '2-mid-position.jpeg', '3-end-position.jpeg'],
+      images: ['1-start-position.jpeg', '3-end-position.jpeg'],
     },
     {
       id: 'rotational-lunge',
       name: 'Lunge with rotation',
-      images: ['1-start-position.png', '2-lunge.png'],
+      images: ['1-start-position.jpeg', '2-lunge.jpeg'],
     },
-    { id: 'side-plank', name: 'Side plank', images: ['side-plank.png'] },
-    { id: 'walking-lunge', name: 'Walking lunge', images: ['1-start-position.png', '2-lunge.png'] },
+    { id: 'side-plank', name: 'Side plank', images: ['side-plank.jpeg'] },
+    {
+      id: 'walking-lunge',
+      name: 'Walking lunge',
+      images: [
+        '1-3-first-third-positions.jpeg',
+        '2-second-position.jpeg',
+        '4-fourth-position.jpeg',
+      ],
+    },
   ];
   await page.goto('/');
 
@@ -356,11 +381,13 @@ test('newly added exercise illustrations appear in their guides in sequence', as
     const image = page.locator('#dialog-content .gallery-image');
     await expect(image).toHaveAttribute('src', `./assets/${exercise.id}/${exercise.images[0]}`);
     await expect(image).toHaveAttribute('alt', /.+/);
+    await expect.poll(() => image.evaluate((element) => element.naturalWidth)).toBeGreaterThan(0);
 
     for (const imagePath of exercise.images.slice(1)) {
       await page.locator('#dialog-content [data-gallery-next]').click();
       await expect(image).toHaveAttribute('src', `./assets/${exercise.id}/${imagePath}`);
       await expect(image).toHaveAttribute('alt', /.+/);
+      await expect.poll(() => image.evaluate((element) => element.naturalWidth)).toBeGreaterThan(0);
     }
     await page.locator('#dialog-close').click();
   }
@@ -748,7 +775,7 @@ test('exercise image opens an enlarged viewer with accessible multi-image contro
   await expect(page.locator('#image-viewer')).toBeHidden();
 });
 
-test('prone Y-T-W exercise images display in their numbered order', async ({ page }) => {
+test('prone Y-T-W exercise images match the illustrated Y, T and W positions', async ({ page }) => {
   await page.goto('/');
   await page.locator('#search').fill('Prone Y-T-W');
   await page.locator('[data-detail="prone-ytw"]').click();
@@ -756,14 +783,18 @@ test('prone Y-T-W exercise images display in their numbered order', async ({ pag
   const gallery = page.locator('#dialog-content [data-exercise-gallery]');
   await expect(gallery.locator('.gallery-dot')).toHaveCount(4);
   const orderedImages = [
-    '1-start-position.jpeg',
-    '2-y-position.jpeg',
-    '3-t-position.jpeg',
-    '4-w-position.jpeg',
+    { filename: '1-start-position.jpeg', position: 'Starting position' },
+    { filename: '2-y-position.jpeg', position: 'Y position' },
+    { filename: '4-t-position.jpeg', position: 'T position' },
+    { filename: '3-w-position.jpeg', position: 'W position' },
   ];
-  for (const [index, imageName] of orderedImages.entries()) {
+  for (const [index, { filename, position }] of orderedImages.entries()) {
     await gallery.locator('.gallery-dot').nth(index).click();
-    await expect(gallery.locator('.gallery-image')).toHaveAttribute('src', new RegExp(imageName));
+    await expect(gallery.locator('.gallery-image')).toHaveAttribute('src', new RegExp(filename));
+    await expect(gallery.locator('.gallery-image')).toHaveAttribute(
+      'alt',
+      new RegExp(position, 'i'),
+    );
     await expect
       .poll(() => gallery.locator('.gallery-image').evaluate((image) => image.naturalWidth))
       .toBeGreaterThan(0);

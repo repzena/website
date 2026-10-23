@@ -698,8 +698,16 @@ test('language selection updates visible controls and remains selected after rel
   page,
 }) => {
   await page.goto('/');
+  await expect(page.locator('.hero-image')).toHaveAttribute(
+    'alt',
+    'Two people exercise in a gym: one presses dumbbells overhead while another holds a plank.',
+  );
   await page.locator('#language').selectOption('es');
   await expect(page.locator('html')).toHaveAttribute('lang', 'es-AR');
+  await expect(page.locator('.hero-image')).toHaveAttribute(
+    'alt',
+    'Dos personas entrenan en un gimnasio: una levanta mancuernas por encima de la cabeza y otra sostiene una plancha.',
+  );
   await expect(page.locator('#search')).toHaveAttribute('placeholder', /Buscá/);
   await expect(page.locator('#routine-name')).toHaveAttribute('aria-label', 'Nombre de la rutina');
   await page.reload();

@@ -188,6 +188,39 @@ test('legacy routine items can open guides by matching their exercise name', asy
   await expect(page.locator('#exercise-dialog h2')).toHaveText('Romanian deadlift');
 });
 
+test('legacy dumbbell shoulder press items open the illustrated seated guide', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#routine-file').setInputFiles({
+    name: 'legacy-routine.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(
+      JSON.stringify({
+        days: [
+          {
+            exercises: [
+              {
+                name: {
+                  en: 'Dumbbell shoulder press',
+                  es: 'Press militar con mancuernas',
+                },
+                sets: 3,
+              },
+            ],
+          },
+        ],
+      }),
+    ),
+  });
+
+  const rowButton = page.locator(
+    '#routine-sections [data-routine-detail="dumbbell-shoulder-press"]',
+  );
+  await expect(rowButton).toBeVisible();
+  await rowButton.click();
+  await expect(page.locator('#exercise-dialog h2')).toHaveText('Seated dumbbell shoulder press');
+  await expect(page.locator('#dialog-content [data-exercise-gallery] .gallery-dot')).toHaveCount(2);
+});
+
 test('routine section titles and guides resolve from stable catalogue exercise IDs', async ({
   page,
 }) => {
@@ -388,6 +421,113 @@ test('newly added exercise illustrations appear in their guides in sequence', as
       await expect(image).toHaveAttribute('src', `./assets/${exercise.id}/${imagePath}`);
       await expect(image).toHaveAttribute('alt', /.+/);
       await expect.poll(() => image.evaluate((element) => element.naturalWidth)).toBeGreaterThan(0);
+    }
+    await page.locator('#dialog-close').click();
+  }
+});
+
+test('all catalogue exercises render their card and guide artwork, including every photo', async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  await page.goto('/');
+  const response = await page.request.get('/data/exercises.json');
+  expect(response.ok()).toBeTruthy();
+  const exercises = await response.json();
+
+  for (const exercise of exercises) {
+    await page.locator('#search').fill(exercise.name.en);
+    const card = page
+      .locator('.exercise-card')
+      .filter({ has: page.locator(`[data-detail="${exercise.id}"]`) });
+    await expect(card).toHaveCount(1);
+
+    if (exercise.images?.length) {
+      const thumbnail = card.locator('.exercise-photo-art img');
+      await expect(thumbnail).toHaveAttribute('src', exercise.images[0].src);
+      await expect.poll(() => thumbnail.evaluate((image) => image.naturalWidth)).toBeGreaterThan(0);
+    } else {
+      await expect(card.locator(`.art-${exercise.image} svg`)).toBeVisible();
+    }
+
+    await card.locator(`[data-detail="${exercise.id}"]`).click();
+    if (exercise.images?.length) {
+      const gallery = page.locator('#dialog-content [data-exercise-gallery]');
+      const guideImage = gallery.locator('.gallery-image');
+      for (const [index, imageData] of exercise.images.entries()) {
+        if (index > 0) await gallery.locator('[data-gallery-next]').click();
+        await expect(guideImage).toHaveAttribute('src', imageData.src);
+        await expect(guideImage).toHaveAttribute('alt', /.+/);
+        await expect
+          .poll(() => guideImage.evaluate((image) => image.naturalWidth))
+          .toBeGreaterThan(0);
+
+        await gallery.locator('[data-gallery-enlarge]').click();
+        const viewerImage = page.locator('#image-viewer .gallery-image');
+        await expect(viewerImage).toHaveAttribute('src', imageData.src);
+        await expect
+          .poll(() => viewerImage.evaluate((image) => image.naturalWidth))
+          .toBeGreaterThan(0);
+        await page.locator('#image-viewer [data-viewer-close]').click();
+      }
+    } else {
+      await expect(page.locator(`#dialog-content .art-${exercise.image} svg`)).toBeVisible();
+    }
+    await page.locator('#dialog-close').click();
+  }
+});
+
+test('every routine exercise opens the matching guide artwork', async ({ page }) => {
+  test.setTimeout(120_000);
+  const response = await page.request.get('/data/exercises.json');
+  expect(response.ok()).toBeTruthy();
+  const exercises = await response.json();
+  await page.addInitScript(
+    ({ storageKey, catalogue }) => {
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify({
+          routines: [
+            {
+              id: 'routine-image-audit',
+              name: 'Image audit',
+              defaultName: false,
+              days: [
+                {
+                  name: 'Image audit session',
+                  defaultName: false,
+                  items: catalogue.map((exercise) => ({
+                    exerciseId: exercise.id,
+                    name: exercise.name.en,
+                    names: exercise.name,
+                    sets: 3,
+                    reps: '8–12',
+                  })),
+                  sections: [],
+                },
+              ],
+            },
+          ],
+          current: 'routine-image-audit',
+        }),
+      );
+    },
+    { storageKey: routineStorageKey, catalogue: exercises },
+  );
+  await page.goto('/#routines');
+
+  for (const exercise of exercises) {
+    const routineButton = page.locator(`#routine-sections [data-routine-detail="${exercise.id}"]`);
+    await expect(routineButton).toBeVisible();
+    await routineButton.click();
+    await expect(page.locator('#exercise-dialog h2')).toHaveText(exercise.name.en);
+
+    if (exercise.images?.length) {
+      const image = page.locator('#dialog-content .gallery-image');
+      await expect(image).toHaveAttribute('src', exercise.images[0].src);
+      await expect.poll(() => image.evaluate((element) => element.naturalWidth)).toBeGreaterThan(0);
+    } else {
+      await expect(page.locator(`#dialog-content .art-${exercise.image} svg`)).toBeVisible();
     }
     await page.locator('#dialog-close').click();
   }

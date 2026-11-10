@@ -257,3 +257,4 @@ $RECYCLE.BIN/
 # Playwright browser-test output
 /playwright-report/
 /test-results/
+.task-cache/npm/

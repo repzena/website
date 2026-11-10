@@ -32,6 +32,11 @@ tasks:
     cmds:
       - npx playwright install --with-deps chromium
 
+  deps:lock:
+    desc: Refresh package-lock.json after dependency manifest changes
+    cmds:
+      - npm install --package-lock-only --ignore-scripts --cache {{.NPM_CACHE}}
+
   preview:
     aliases: [serve, dev]
     desc: Preview the static site at http://localhost:{{.PORT}}

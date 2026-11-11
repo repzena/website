@@ -12,11 +12,67 @@ const test = base.extend({
   },
 });
 
+test('home, exercise library and routine builder are separate navigable screens', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(page.locator('#home')).toBeVisible();
+  await expect(page.locator('[data-page="exercises"]')).toBeHidden();
+  await expect(page.locator('[data-page="routines"]')).toBeHidden();
+  await expect(page.getByRole('link', { name: 'Explore exercises' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Build your workout' })).toBeVisible();
+  await expect(page.locator('.hero-actions [aria-hidden="true"]')).toHaveCount(0);
+  await expect(page.locator('.section-number')).toHaveCount(0);
+
+  await page.getByRole('link', { name: 'Build your workout' }).click();
+  await expect(page.locator('[data-page="routines"]')).toBeVisible();
+  await expect(page.locator('.nav-links [data-page-link="routines"]')).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+  await page.locator('.nav-links [data-page-link="exercises"]').click();
+  await expect(page.locator('[data-page="exercises"]')).toBeVisible();
+  await expect(page.locator('.nav-links [data-page-link="exercises"]')).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+});
+
+test('closing a guide restores the exact scroll position on its original screen', async ({
+  page,
+}) => {
+  await page.goto('/#exercises');
+  await page.evaluate(() => window.scrollTo(0, 420));
+  const exerciseScroll = await page.evaluate(() => window.scrollY);
+  await page
+    .locator('.exercise-card [data-detail]')
+    .first()
+    .evaluate((link) => link.click());
+  await expect(page.locator('#exercise-dialog')).toBeVisible();
+  await page.locator('#dialog-close').click();
+  await expect(page.locator('#exercise-dialog')).toBeHidden();
+  await expect(page).toHaveURL(/#exercises$/);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(exerciseScroll);
+
+  await page.locator('.nav-links [data-page-link="routines"]').click();
+  await page.locator('#add-exercise').selectOption('barbell-bench-press');
+  await page.locator('#add-exercise-button').click();
+  await page.evaluate(() => window.scrollTo(0, 300));
+  const routineScroll = await page.evaluate(() => window.scrollY);
+  await page.locator('#routine-sections [data-routine-detail]').click();
+  await expect(page.locator('#exercise-dialog')).toBeVisible();
+  await page.locator('#dialog-close').click();
+  await expect(page.locator('#exercise-dialog')).toBeHidden();
+  await expect(page).toHaveURL(/#routines$/);
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(routineScroll);
+});
+
 test('content security policy allows the app and blocks injected inline scripts', async ({
   page,
 }) => {
   await page.goto('/');
-  await expect(page.locator('.exercise-card').first()).toBeVisible();
+  await expect(page.locator('#home')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Explore exercises' })).toBeVisible();
   await expect(page.locator('#theme')).toHaveValue('system');
   const favicon = page.locator('link[rel="icon"]');
   await expect(favicon).toHaveAttribute('href', 'favicon.svg');
@@ -44,13 +100,15 @@ test('content security policy allows the app and blocks injected inline scripts'
 test('quick add stores an exercise in the selected routine and restores it after reload', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/#exercises');
   const card = page.locator('.exercise-card').first();
   await expect(card).toBeVisible();
   const exerciseName = await card.locator('h3').innerText();
   await card.locator('[data-add]').click();
   await expect(page.locator('#add-dialog')).toBeVisible();
   await page.locator('#confirm-add-to-routine').click();
+
+  await page.locator('.nav-links [data-page-link="routines"]').click();
 
   const routineItem = page.locator('#routine-sections .routine-item');
   await expect(routineItem).toHaveCount(1);
@@ -61,7 +119,7 @@ test('quick add stores an exercise in the selected routine and restores it after
 });
 
 test('pagination changes the visible exercise set', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/#exercises');
   const status = page.locator('#pagination-status');
   await expect(status).toContainText('of 50');
   const firstExercise = await page.locator('.exercise-card h3').first().innerText();
@@ -76,7 +134,7 @@ test('exercise page size follows the responsive grid across reloads and viewport
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto('/');
+  await page.goto('/#exercises');
   const status = page.locator('#pagination-status');
   await expect(status).toHaveText('Showing 1–8 of 50');
   await expect(page.locator('.exercise-card')).toHaveCount(8);
@@ -99,7 +157,7 @@ test('exercise page size follows the responsive grid across reloads and viewport
 test('search handles Spanish names without accents and combines library filters', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/#exercises');
   await page.locator('#language').selectOption('es');
   await page.locator('#search').fill('peso muerto rumano');
   await expect(page.locator('.exercise-card h3')).toHaveText('Peso muerto rumano');
@@ -117,7 +175,7 @@ test('search handles Spanish names without accents and combines library filters'
 });
 
 test('focus filter applies and clears through its dropdown and active chip', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/#exercises');
   await page.locator('#focus-filter').selectOption('strength');
   await expect(page.locator('#active-filters .filter-chip')).toHaveCount(1);
   await expect(page.locator('#active-filters .filter-chip')).toHaveText('Strength ×');
@@ -134,7 +192,7 @@ test('focus filter applies and clears through its dropdown and active chip', asy
 });
 
 test('exercise guide URLs reopen the bookmarked guide', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/#exercises');
   const card = page.locator('.exercise-card').first();
   const exerciseId = await card.locator('[data-detail]').getAttribute('data-detail');
   const exerciseName = await card.locator('h3').innerText();
@@ -150,7 +208,7 @@ test('exercise guide URLs reopen the bookmarked guide', async ({ page }) => {
 test('the whole exercise card opens its guide and the routine exercise link does too', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/#exercises');
   const card = page.locator('.exercise-card').first();
   const exerciseName = await card.locator('h3').innerText();
   await card.locator('[data-detail]').evaluate((link) => link.click());
@@ -160,6 +218,7 @@ test('the whole exercise card opens its guide and the routine exercise link does
 
   await card.locator('[data-add]').click();
   await page.locator('#confirm-add-to-routine').click();
+  await page.locator('.nav-links [data-page-link="routines"]').click();
   await page.locator('#routine-sections [data-routine-detail]').click();
   await expect(page.locator('#exercise-dialog h2')).toHaveText(exerciseName);
   await page.locator('#dialog-close').click();
@@ -168,7 +227,7 @@ test('the whole exercise card opens its guide and the routine exercise link does
 });
 
 test('legacy routine items can open guides by matching their exercise name', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/#routines');
   await page.locator('#routine-file').setInputFiles({
     name: 'legacy-routine.json',
     mimeType: 'application/json',
@@ -189,7 +248,7 @@ test('legacy routine items can open guides by matching their exercise name', asy
 });
 
 test('legacy dumbbell shoulder press items open the illustrated seated guide', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/#routines');
   await page.locator('#routine-file').setInputFiles({
     name: 'legacy-routine.json',
     mimeType: 'application/json',
@@ -262,7 +321,7 @@ test('routine section titles and guides resolve from stable catalogue exercise I
       }),
     );
   }, routineStorageKey);
-  await page.goto('/');
+  await page.goto('/#routines');
 
   const exerciseButton = page.locator(
     '#routine-sections [data-routine-detail="romanian-deadlift"]',
@@ -287,9 +346,10 @@ test('routine section titles and guides resolve from stable catalogue exercise I
 test('routine exercise sets and reps can be edited and remain saved after reload', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/#exercises');
   await page.locator('.exercise-card').first().locator('[data-add]').click();
   await page.locator('#confirm-add-to-routine').click();
+  await page.locator('.nav-links [data-page-link="routines"]').click();
 
   const item = page.locator('#routine-sections .routine-item').first();
   await item.locator('[data-edit-item]').click();
@@ -309,7 +369,7 @@ test('routine exercise sets and reps can be edited and remain saved after reload
 test('routine and session removal confirm, update selection, and preserve one of each', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/#routines');
   await expect(page.locator('#remove-routine')).toBeDisabled();
   await expect(page.locator('#day-tabs [data-remove-day]')).toBeDisabled();
 
@@ -350,7 +410,7 @@ test('routine and session removal confirm, update selection, and preserve one of
 test('exercise guide omits the primary-muscle field when the catalogue has no value', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/#exercises');
   await page.locator('#search').fill('Forearm plank');
   await page.locator('[data-detail="plank"]').click();
   await expect(page.locator('#exercise-dialog')).toBeVisible();
@@ -405,7 +465,7 @@ test('newly added exercise illustrations appear in their guides in sequence', as
       ],
     },
   ];
-  await page.goto('/');
+  await page.goto('/#exercises');
 
   for (const exercise of illustratedExercises) {
     await page.locator('#search').fill(exercise.name);
@@ -430,7 +490,7 @@ test('all catalogue exercises render their card and guide artwork, including eve
   page,
 }) => {
   test.setTimeout(120_000);
-  await page.goto('/');
+  await page.goto('/#exercises');
   const response = await page.request.get('/data/exercises.json');
   expect(response.ok()).toBeTruthy();
   const exercises = await response.json();
@@ -536,7 +596,7 @@ test('every routine exercise opens the matching guide artwork', async ({ page })
 test('unmatched routine items can be linked once and then open their guide directly', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/#routines');
   await page.locator('#routine-file').setInputFiles({
     name: 'unmatched-routine.json',
     mimeType: 'application/json',
@@ -569,7 +629,7 @@ test('unmatched routine items can be linked once and then open their guide direc
 test('routine sections are optional, and the starter layout can be added on demand', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/#routines');
   await expect(page.locator('#routine-sections .routine-group')).toHaveCount(0);
   await expect(page.locator('#section-target')).toBeHidden();
   await expect(page.locator('#use-starter-layout')).toBeVisible();
@@ -586,7 +646,7 @@ test('routine sections are optional, and the starter layout can be added on dema
 test('custom sections can be added, renamed, reordered, collapsed and removed', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/#routines');
   await page.locator('#toggle-section-form').click();
   await page.locator('#section-type').selectOption('custom');
   await page.locator('#custom-section-name').fill('Warm-up');
@@ -614,18 +674,20 @@ test('custom sections can be added, renamed, reordered, collapsed and removed', 
 });
 
 test('quick add can target a selected routine session and section', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/#routines');
   await page.locator('#add-day').click();
   await page.locator('#toggle-section-form').click();
   await page.locator('#section-type').selectOption('custom');
   await page.locator('#custom-section-name').fill('Pull work');
   await page.locator('#add-section-button').click();
 
+  await page.locator('.nav-links [data-page-link="exercises"]').click();
   await page.locator('.exercise-card').first().locator('[data-add]').click();
   await expect(page.locator('#add-routine-target option')).toHaveCount(1);
   await page.locator('#add-session-target').selectOption('1');
   await page.locator('#add-section-target').selectOption({ label: 'Pull work' });
   await page.locator('#confirm-add-to-routine').click();
+  await page.locator('.nav-links [data-page-link="routines"]').click();
   await expect(page.locator('#routine-sections .section-name')).toContainText('Pull work');
   await expect(page.locator('#routine-sections .routine-item')).toHaveCount(1);
   await expect(page.locator('#routine-sections .routine-item')).toContainText(
@@ -637,7 +699,7 @@ test('quick add can target a selected routine session and section', async ({ pag
 });
 
 test('routine import and export preserve the routine and exercise data', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/#routines');
   const importedRoutine = {
     format: 'gym-exercise-routine',
     version: 1,
@@ -682,7 +744,7 @@ test('routine import and export preserve the routine and exercise data', async (
 });
 
 test('routine import treats names as text and rejects malformed data safely', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/#routines');
   const hostileName = '<img src=x onerror="window.injected = true">';
   const hostileReps = '"><img src=x onerror="window.injected = true">';
   await page.locator('#routine-file').setInputFiles({
@@ -729,7 +791,7 @@ test('routine storage failures show an error and do not claim the exercise was s
       return originalSetItem.call(this, itemKey, value);
     };
   }, routineStorageKey);
-  await page.goto('/');
+  await page.goto('/#exercises');
   await page.locator('.exercise-card').first().locator('[data-add]').click();
   await page.locator('#confirm-add-to-routine').click();
 
@@ -782,7 +844,7 @@ test('failed routine edits restore names, sessions, removals, and order', async 
       return originalSetItem.call(this, itemKey, value);
     };
   }, routineStorageKey);
-  await page.goto('/');
+  await page.goto('/#routines');
 
   await page.locator('#routine-name').fill('Unsaved name');
   await page.locator('#save-routine').click();
@@ -857,7 +919,7 @@ test('language selection updates visible controls and remains selected after rel
 
 test('routine section controls stay usable at a narrow phone viewport', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/');
+  await page.goto('/#routines');
   await page.locator('#use-starter-layout').click();
   const select = page.locator('#section-target');
   await expect(select).toBeVisible();
@@ -879,7 +941,7 @@ test('exercise image opens an enlarged viewer with accessible multi-image contro
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/');
+  await page.goto('/#exercises');
   await page.locator('#search').fill('Arnold press');
   const card = page.locator('.exercise-card').filter({
     has: page.locator('[data-detail="arnold-press"]'),
@@ -924,7 +986,7 @@ test('exercise image opens an enlarged viewer with accessible multi-image contro
 });
 
 test('prone Y-T-W exercise images match the illustrated Y, T and W positions', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/#exercises');
   await page.locator('#search').fill('Prone Y-T-W');
   await page.locator('[data-detail="prone-ytw"]').click();
 
@@ -953,7 +1015,7 @@ test('the cached exercise library remains available after going offline', async 
   page,
   context,
 }) => {
-  await page.goto('/');
+  await page.goto('/#exercises');
   await expect(page.locator('.exercise-card').first()).toBeVisible();
   await page.evaluate(async () => {
     await navigator.serviceWorker.ready;

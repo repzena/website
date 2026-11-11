@@ -64,6 +64,11 @@ tasks:
     cmds:
       - npm run build
 
+  offline:size:
+    desc: Report the exercise library and service worker precache size
+    cmds:
+      - node scripts/report-offline-size.mjs
+
   lint:
     desc: Run JavaScript, JSON, and formatting checks
     deps: [lint:js, lint:json, format:check]

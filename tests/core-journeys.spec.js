@@ -16,7 +16,7 @@ test('home, exercise library and routine builder are separate navigable screens'
   page,
 }) => {
   await page.goto('/');
-  await expect(page.locator('[data-page="home"]')).toBeVisible();
+  await expect(page.locator('#home')).toBeVisible();
   await expect(page.locator('[data-page="exercises"]')).toBeHidden();
   await expect(page.locator('[data-page="routines"]')).toBeHidden();
   await expect(page.getByRole('link', { name: 'Explore exercises' })).toBeVisible();
@@ -26,10 +26,13 @@ test('home, exercise library and routine builder are separate navigable screens'
 
   await page.getByRole('link', { name: 'Build your workout' }).click();
   await expect(page.locator('[data-page="routines"]')).toBeVisible();
-  await expect(page.locator('[data-page-link="routines"]')).toHaveAttribute('aria-current', 'page');
-  await page.locator('[data-page-link="exercises"]').click();
+  await expect(page.locator('.nav-links [data-page-link="routines"]')).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+  await page.locator('.nav-links [data-page-link="exercises"]').click();
   await expect(page.locator('[data-page="exercises"]')).toBeVisible();
-  await expect(page.locator('[data-page-link="exercises"]')).toHaveAttribute(
+  await expect(page.locator('.nav-links [data-page-link="exercises"]')).toHaveAttribute(
     'aria-current',
     'page',
   );
@@ -51,7 +54,7 @@ test('closing a guide restores the exact scroll position on its original screen'
   await expect(page).toHaveURL(/#exercises$/);
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(exerciseScroll);
 
-  await page.locator('[data-page-link="routines"]').click();
+  await page.locator('.nav-links [data-page-link="routines"]').click();
   await page.locator('#add-exercise').selectOption('barbell-bench-press');
   await page.locator('#add-exercise-button').click();
   await page.evaluate(() => window.scrollTo(0, 300));
@@ -68,7 +71,7 @@ test('content security policy allows the app and blocks injected inline scripts'
   page,
 }) => {
   await page.goto('/');
-  await expect(page.locator('[data-page="home"]')).toBeVisible();
+  await expect(page.locator('#home')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Explore exercises' })).toBeVisible();
   await expect(page.locator('#theme')).toHaveValue('system');
   const favicon = page.locator('link[rel="icon"]');
@@ -105,7 +108,7 @@ test('quick add stores an exercise in the selected routine and restores it after
   await expect(page.locator('#add-dialog')).toBeVisible();
   await page.locator('#confirm-add-to-routine').click();
 
-  await page.locator('[data-page-link="routines"]').click();
+  await page.locator('.nav-links [data-page-link="routines"]').click();
 
   const routineItem = page.locator('#routine-sections .routine-item');
   await expect(routineItem).toHaveCount(1);
@@ -215,7 +218,7 @@ test('the whole exercise card opens its guide and the routine exercise link does
 
   await card.locator('[data-add]').click();
   await page.locator('#confirm-add-to-routine').click();
-  await page.locator('[data-page-link="routines"]').click();
+  await page.locator('.nav-links [data-page-link="routines"]').click();
   await page.locator('#routine-sections [data-routine-detail]').click();
   await expect(page.locator('#exercise-dialog h2')).toHaveText(exerciseName);
   await page.locator('#dialog-close').click();
@@ -346,7 +349,7 @@ test('routine exercise sets and reps can be edited and remain saved after reload
   await page.goto('/#exercises');
   await page.locator('.exercise-card').first().locator('[data-add]').click();
   await page.locator('#confirm-add-to-routine').click();
-  await page.locator('[data-page-link="routines"]').click();
+  await page.locator('.nav-links [data-page-link="routines"]').click();
 
   const item = page.locator('#routine-sections .routine-item').first();
   await item.locator('[data-edit-item]').click();
@@ -678,13 +681,13 @@ test('quick add can target a selected routine session and section', async ({ pag
   await page.locator('#custom-section-name').fill('Pull work');
   await page.locator('#add-section-button').click();
 
-  await page.locator('[data-page-link="exercises"]').click();
+  await page.locator('.nav-links [data-page-link="exercises"]').click();
   await page.locator('.exercise-card').first().locator('[data-add]').click();
   await expect(page.locator('#add-routine-target option')).toHaveCount(1);
   await page.locator('#add-session-target').selectOption('1');
   await page.locator('#add-section-target').selectOption({ label: 'Pull work' });
   await page.locator('#confirm-add-to-routine').click();
-  await page.locator('[data-page-link="routines"]').click();
+  await page.locator('.nav-links [data-page-link="routines"]').click();
   await expect(page.locator('#routine-sections .section-name')).toContainText('Pull work');
   await expect(page.locator('#routine-sections .routine-item')).toHaveCount(1);
   await expect(page.locator('#routine-sections .routine-item')).toContainText(
@@ -916,7 +919,7 @@ test('language selection updates visible controls and remains selected after rel
 
 test('routine section controls stay usable at a narrow phone viewport', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/');
+  await page.goto('/#routines');
   await page.locator('#use-starter-layout').click();
   const select = page.locator('#section-target');
   await expect(select).toBeVisible();

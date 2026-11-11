@@ -2,9 +2,11 @@ import { defineConfig, devices } from '@playwright/test';
 import process from 'node:process';
 
 const port = Number(process.env.PLAYWRIGHT_PORT || 4173);
+const outputDir = process.env.PLAYWRIGHT_OUTPUT_DIR || './test-results';
 
 export default defineConfig({
   testDir: './tests',
+  outputDir,
   fullyParallel: true,
   workers: 2,
   forbidOnly: Boolean(process.env.CI),

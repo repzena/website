@@ -643,6 +643,7 @@ function setActivePage(page) {
     if (link.dataset.pageLink === activePage) link.setAttribute('aria-current', 'page');
     else link.removeAttribute('aria-current');
   });
+  if (activePage === 'exercises') renderExercises();
   if (!$('#exercise-dialog').open) document.title = pageTitle(activePage);
 }
 function setScrollPosition(position) {

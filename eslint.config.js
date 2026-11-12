@@ -5,6 +5,9 @@ const browserGlobals = Object.fromEntries(
     'Blob',
     'Buffer',
     'DOMException',
+    'Event',
+    'EventTarget',
+    'Response',
     'Storage',
     'URL',
     'clearTimeout',
@@ -24,7 +27,7 @@ const browserGlobals = Object.fromEntries(
 
 export default [
   {
-    files: ['app.js', 'playwright.config.js', 'tests/**/*.js'],
+    files: ['app.js', 'playwright.config.js', 'scripts/**/*.mjs', 'tests/**/*.js'],
     ...js.configs.recommended,
     languageOptions: {
       ...js.configs.recommended.languageOptions,

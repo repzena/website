@@ -24,23 +24,27 @@ const imagePaths = [
 ];
 const localPath = (urlPath) => path.join(root, urlPath === './' ? 'index.html' : urlPath.slice(2));
 const sizeOf = async (filePath) => (await stat(filePath)).size;
-const imageBytes = (await Promise.all(imagePaths.map((imagePath) => sizeOf(localPath(imagePath)))))
-  .reduce((total, bytes) => total + bytes, 0);
-const coreBytes = (
+const imageBytes = (
+  await Promise.all(imagePaths.map((imagePath) => sizeOf(localPath(imagePath))))
+).reduce((total, bytes) => total + bytes, 0);
+const shellBytes = (
   await Promise.all(
-    corePaths.filter((urlPath) => urlPath !== './data/exercises.json').map((urlPath) => {
+    corePaths.map((urlPath) => {
       if (urlPath === './') return sizeOf(localPath('./'));
       return sizeOf(localPath(urlPath));
     }),
   )
 ).reduce((total, bytes) => total + bytes, 0);
 const catalogBytes = Buffer.byteLength(catalogText);
-const totalPrecacheBytes = coreBytes + catalogBytes + imageBytes;
 const heroBytes = await sizeOf(path.join(root, 'assets', 'hero', 'hero.jpeg'));
+const offlineDownloadBytes = imageBytes + heroBytes;
 const mib = (bytes) => `${(bytes / 1024 / 1024).toFixed(2)} MiB`;
 
 console.log(`Exercise library: ${catalog.length} exercises`);
 console.log(`Exercise images: ${imagePaths.length} files, ${mib(imageBytes)}`);
 console.log(`Catalogue JSON: ${mib(catalogBytes)}`);
-console.log(`Current service worker install precache: ${mib(totalPrecacheBytes)}`);
-console.log(`Hero image (cached after it is fetched): ${mib(heroBytes)}`);
+console.log(`App shell install precache: ${mib(shellBytes)}`);
+console.log(
+  `Optional offline download: ${mib(offlineDownloadBytes)} (${imagePaths.length} exercise images + home image)`,
+);
+console.log(`Full offline data including the catalog: ${mib(offlineDownloadBytes + catalogBytes)}`);

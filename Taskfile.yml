@@ -40,6 +40,7 @@ tasks:
   preview:
     aliases: [serve, dev]
     desc: Preview the static site at http://localhost:{{.PORT}}
+    deps: [offline:manifest]
     preconditions:
       - sh: command -v python3
         msg: Install Python 3 to run the local preview server.
@@ -58,16 +59,32 @@ tasks:
 
   build:
     desc: Build the static site into dist/ for deployment
+    deps: [offline:manifest]
     preconditions:
       - sh: command -v node
         msg: Install Node.js to build the static site.
     cmds:
       - npm run build
 
+  pwa:icons:
+    desc: Regenerate the PWA PNG icons from the SVG brand mark
+    preconditions:
+      - sh: command -v magick
+        msg: Install ImageMagick to regenerate the PWA icons.
+    cmds:
+      - magick assets/icons/app-icon.svg -background none -resize 192x192 assets/icons/app-icon-192.png
+      - magick assets/icons/app-icon.svg -background none -resize 512x512 assets/icons/app-icon-512.png
+      - magick assets/icons/app-icon.svg -background none -resize 180x180 assets/icons/apple-touch-icon.png
+
   offline:size:
     desc: Report the exercise library and service worker precache size
     cmds:
       - node scripts/report-offline-size.mjs
+
+  offline:manifest:
+    desc: Refresh image hashes used to keep offline downloads current
+    cmds:
+      - node scripts/generate-offline-manifest.mjs
 
   lint:
     desc: Run JavaScript, JSON, and formatting checks
@@ -87,7 +104,9 @@ tasks:
       - sh: command -v node
         msg: Install Node.js to validate the exercise data.
     cmds:
+      - node scripts/generate-offline-manifest.mjs --check
       - npm run lint:json
+      - node scripts/validate-pwa.mjs
 
   format:
     desc: Format project source and configuration files
@@ -107,6 +126,7 @@ tasks:
 
   test:
     desc: Run browser regression tests against the local static site
+    deps: [offline:manifest]
     preconditions:
       - sh: test -x node_modules/.bin/playwright
         msg: Run 'task install' to install the project tools and browser.

@@ -18,7 +18,12 @@
 - `app.js` — language strings, exercise rendering/search/filtering, detail views, and routine behavior. It keeps a validated catalogue copy in browser storage for offline fallback.
 - `theme.js` — early theme preference bootstrap, loaded externally so the page can enforce a Content Security Policy without inline JavaScript.
 - `data/exercises.json` — public exercise catalog; each exercise has a stable ID, localized names, instructions and cues, tags, and illustration key.
-- `service-worker.js` — caches the static page shell and catalogue for offline visits; keep its cache versioned when cache contents or behaviour change.
+- `data/offline-assets.json` — generated content hashes for every exercise image and the home image; refresh it with `task offline:manifest` after changing artwork.
+- `manifest.webmanifest` — install name, standalone display settings, and app icons for the PWA.
+- `service-worker.js` — caches the static app shell on first visit and downloads exercise images only after an explicit offline request or app installation; it verifies artwork hashes and syncs offline state between tabs. Keep its static cache versioned when cache contents or behaviour change.
+- `assets/icons/` — source SVG and generated PNG PWA icons. Regenerate the PNGs with `task pwa:icons` when the source changes.
+- `scripts/validate-pwa.mjs` — validates the manifest and referenced icons during lint/build.
+- `scripts/generate-offline-manifest.mjs` — regenerates the committed offline image hashes; `task test`, `task build`, and `task preview` refresh it automatically, and `task lint` checks that it is current.
 - `robots.txt` and `sitemap.xml` — public crawler guidance and the homepage sitemap, copied into the deployable site by the build.
 - `assets/` — local public assets, when needed. Use original or appropriately licensed files.
 - `private-data/` — personal routines and other private local content. It is ignored by Git; do not publish or copy its contents into the public catalog or build.
@@ -32,6 +37,7 @@
 - Write exercise instructions as short, actionable steps. Keep cautions specific, practical, and proportionate; do not present the guide as medical advice.
 - Preserve source names and prescriptions when importing a user's routine. Treat external video links as unverified until checked.
 - Keep the phone-at-the-gym use case first: readable text, clear movement illustrations, obvious equipment and muscle tags, and controls with comfortable touch targets.
+- Keep app installation optional. Users can install through the browser prompt or browser menu, or download the exercise library and images for offline use without installing. Routines remain device-local.
 - Keep interactions keyboard-accessible. Use semantic HTML, visible focus states, useful labels, and text alternatives for meaningful images.
 - Keep UI wording in the `UI` locale dictionaries in `app.js`; add British English and Argentinian Spanish for every new user-facing string. Use natural voseo (for example, “Buscá”, “Agregá”, “Guardá”) without clichés or forced slang.
 - Exercise taxonomy labels live in the localized `names` maps in `app.js`. Add both locale labels for each new tag and keep catalog IDs consistent with those maps. Use British spelling and vocabulary in English, and common, clear gym terminology in Argentinian Spanish.
@@ -49,6 +55,7 @@
 
 - Use the Taskfile-defined task for project operations and checks instead of invoking the underlying `npm`, `node`, or `python` commands directly. Use `task --list` to find the available tasks.
 - Run `task test` after changing runtime behaviour or browser tests, and whenever the user asks to run the test suite. Do not replace it with the underlying npm script.
+- Treat tests as regression guardrails for behaviour that was already working. When a user reports a failing test, first assume the test correctly captures expected behaviour and fix the implementation without changing the test. Change a test only when product behaviour intentionally changed or its setup does not represent a valid user scenario; preserve coverage for the real behaviour and use case.
 - After source changes, run `task lint`; run `task build` when the change affects the published site.
 - If an operation does not have a suitable task, add one to `Taskfile.yml` and run it through `task`.
 

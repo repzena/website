@@ -4,12 +4,14 @@ import path from 'node:path';
 
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
 await import('./validate-data.mjs');
+await import('./validate-pwa.mjs');
 const distDir = path.join(projectRoot, 'dist');
 const stagingDir = path.join(projectRoot, '.dist-staging');
 const backupDir = path.join(projectRoot, '.dist-previous');
 const publicFiles = [
   'index.html',
   'favicon.svg',
+  'manifest.webmanifest',
   'styles.css',
   'app.js',
   'theme.js',

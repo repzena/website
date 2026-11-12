@@ -761,6 +761,50 @@ test('unmatched routine items can be linked once and then open their guide direc
   await expect(page.locator('#exercise-dialog h2')).toHaveText('Romanian deadlift');
 });
 
+test('routine ankle and knee circles names match the catalogue exercise', async ({ page }) => {
+  await page.goto('/#routines');
+  await page.locator('#routine-file').setInputFiles({
+    name: 'ankle-and-knee-circles.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(
+      JSON.stringify({
+        days: [
+          {
+            exercises: [
+              {
+                name: {
+                  en: 'Ankle and knee circles',
+                  es: 'Circunducciones de tobillo y rodilla',
+                },
+                sets: 2,
+                reps_or_time: { en: '30"" total', es: '30"" total' },
+              },
+              {
+                name: { es: 'Circunducciones de tobillo y rodilla' },
+                sets: 2,
+                reps_or_time: { es: '30 segundos' },
+              },
+            ],
+          },
+        ],
+      }),
+    ),
+  });
+
+  const matchedExercises = page.locator(
+    '#routine-sections [data-routine-detail="ankle-knee-circles"]',
+  );
+  await expect(matchedExercises).toHaveCount(2);
+  await matchedExercises.first().click();
+  await expect(page.locator('#exercise-dialog h2')).toHaveText('Ankle circles and knee bends');
+  await page.locator('#dialog-close').click();
+  await page.locator('#language').selectOption('es');
+  await matchedExercises.nth(1).click();
+  await expect(page.locator('#exercise-dialog h2')).toHaveText(
+    'Círculos de tobillo y flexiones de rodilla',
+  );
+});
+
 test('routine sections are optional, and the starter layout can be added on demand', async ({
   page,
 }) => {

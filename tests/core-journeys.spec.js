@@ -672,6 +672,75 @@ test('all catalogue exercises render their card and guide artwork, including eve
   }
 });
 
+test('exercise card thumbnails can change images without opening the guide', async ({ page }) => {
+  const exercises = await page.request
+    .get('/data/exercises.json')
+    .then((response) => response.json());
+  const exercise = exercises.find((item) => item.images?.length > 1);
+  expect(exercise).toBeTruthy();
+
+  await page.goto('/#exercises');
+  await page.locator('#search').fill(exercise.name.en);
+  const card = page.locator('.exercise-card').filter({
+    has: page.locator(`[data-detail="${exercise.id}"]`),
+  });
+  const thumbnail = card.locator('[data-card-image]');
+  const next = card.locator('[data-card-image-change="1"]');
+  const count = card.locator('[data-card-image-count]');
+
+  await expect(thumbnail).toHaveAttribute('src', exercise.images[0].src);
+  await expect(next).toHaveAccessibleName('Next image');
+  for (const [index, image] of exercise.images.entries()) {
+    if (index > 0) await next.click();
+    await expect(thumbnail).toHaveAttribute('src', image.src);
+    await expect(count).toHaveText(`${index + 1} / ${exercise.images.length}`);
+  }
+  await next.click();
+  await expect(thumbnail).toHaveAttribute('src', exercise.images[0].src);
+
+  const galleryBounds = await card.locator('[data-card-gallery]').boundingBox();
+  await card.locator(`[data-detail="${exercise.id}"]`).evaluate(
+    (link, { x, y }) => {
+      link.dispatchEvent(
+        new window.PointerEvent('pointerdown', {
+          bubbles: true,
+          pointerType: 'touch',
+          isPrimary: true,
+          clientX: x,
+          clientY: y,
+        }),
+      );
+      link.dispatchEvent(
+        new window.PointerEvent('pointerup', {
+          bubbles: true,
+          pointerType: 'touch',
+          isPrimary: true,
+          clientX: x - 100,
+          clientY: y,
+        }),
+      );
+      link.dispatchEvent(
+        new window.MouseEvent('click', {
+          bubbles: true,
+          cancelable: true,
+          clientX: x - 100,
+          clientY: y,
+        }),
+      );
+    },
+    {
+      x: galleryBounds.x + galleryBounds.width / 2,
+      y: galleryBounds.y + galleryBounds.height / 2,
+    },
+  );
+  await expect(thumbnail).toHaveAttribute('src', exercise.images[1].src);
+  await expect(page.locator('#exercise-dialog')).toBeHidden();
+  await expect(page).toHaveURL(/#exercises$/);
+
+  await card.locator(`[data-detail="${exercise.id}"]`).click();
+  await expect(page.locator('#exercise-dialog')).toBeVisible();
+});
+
 test('every routine exercise opens the matching guide artwork', async ({ page }) => {
   test.setTimeout(120_000);
   const response = await page.request.get('/data/exercises.json');

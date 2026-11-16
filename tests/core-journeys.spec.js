@@ -77,6 +77,96 @@ test('the installable app metadata and optional install control are available', 
   expect(automaticallyCachedExerciseImages).toBe(0);
 });
 
+test('iPhone install help gives current Safari steps in the selected language', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'userAgent', {
+      configurable: true,
+      value:
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 27_0 like Mac OS X) AppleWebKit/605.1.15 Version/27.0 Mobile/15E148 Safari/604.1',
+    });
+  });
+  await page.goto('/');
+
+  await page.locator('#install-app').click();
+  await expect(page.locator('#install-dialog')).toBeVisible();
+  const steps = page.locator('#install-help-steps li');
+  await expect(steps).toHaveCount(4);
+  await expect(steps.nth(0)).toContainText('directly in Safari');
+  await expect(steps.nth(1)).toContainText('tap Share');
+  await expect(steps.nth(2)).toContainText('Add to Home Screen');
+  await expect(steps.nth(3)).toContainText('Open as Web App');
+  await expect(page.locator('#install-help-offline-note')).toContainText(
+    'without adding an app icon',
+  );
+
+  await page.locator('#close-install-dialog').click();
+  await page.locator('#language').selectOption('es');
+  await page.locator('#install-app').click();
+  await expect(page.locator('#install-help-steps li').nth(0)).toContainText(
+    'directamente en Safari',
+  );
+  await expect(page.locator('#install-help-steps li').nth(2)).toContainText(
+    'Agregar a pantalla de inicio',
+  );
+});
+
+test('install help selects the current instructions for other mobile browsers', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'userAgent', {
+      configurable: true,
+      get: () =>
+        window.__installTestUserAgent || 'Mozilla/5.0 (Android 14; Mobile) Chrome/136.0.0.0',
+    });
+  });
+  await page.goto('/');
+
+  const browserCases = [
+    {
+      userAgent:
+        'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/136.0.0.0 Mobile Safari/537.36',
+      expected: 'Install and create shortcut',
+    },
+    {
+      userAgent:
+        'Mozilla/5.0 (Linux; Android 14; SM-S928B) AppleWebKit/537.36 Chrome/136.0.0.0 Mobile Safari/537.36 SamsungBrowser/28.0',
+      expected: 'Add page to',
+    },
+    {
+      userAgent: 'Mozilla/5.0 (Android 14; Mobile; rv:142.0) Gecko/142.0 Firefox/142.0',
+      expected: 'Add automatically',
+    },
+    {
+      userAgent:
+        'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/136.0.0.0 Mobile Safari/537.36 EdgA/136.0.0.0',
+      expected: 'only offers a shortcut',
+    },
+    {
+      userAgent:
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 27_0 like Mac OS X) AppleWebKit/605.1.15 CriOS/136.0.0.0 Mobile/15E148 Safari/604.1',
+      expected: 'Tap Share to the right of the address bar',
+    },
+    {
+      userAgent:
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 27_0 like Mac OS X) AppleWebKit/605.1.15 FxiOS/142.0 Mobile/15E148 Safari/605.1.15',
+      expected: 'Share icon in the address bar',
+    },
+  ];
+
+  for (const browserCase of browserCases) {
+    await page.evaluate((userAgent) => {
+      window.__installTestUserAgent = userAgent;
+    }, browserCase.userAgent);
+    await page.locator('#install-app').click();
+    await expect(page.locator('#install-dialog')).toBeVisible();
+    await expect(page.locator('#install-help-steps')).toContainText(browserCase.expected);
+    await page.locator('#close-install-dialog').click();
+  }
+});
+
 test('exercise guides can be explicitly saved for offline use and removed again', async ({
   page,
 }) => {

@@ -38,6 +38,7 @@
 - Preserve source names and prescriptions when importing a user's routine. Treat external video links as unverified until checked.
 - Keep the phone-at-the-gym use case first: readable text, clear movement illustrations, obvious equipment and muscle tags, and controls with comfortable touch targets.
 - Keep app installation optional. Users can install through the browser prompt or browser menu, or download the exercise library and images for offline use without installing. Routines remain device-local.
+- Google Analytics is optional and must not load or send events before the visitor explicitly accepts. Keep its measurement ID in `data/analytics-config.json`, outside application logic, and provide a persistent way to revisit or withdraw consent.
 - Keep interactions keyboard-accessible. Use semantic HTML, visible focus states, useful labels, and text alternatives for meaningful images.
 - Keep UI wording in the `UI` locale dictionaries in `app.js`; add British English and Argentinian Spanish for every new user-facing string. Use natural voseo (for example, “Buscá”, “Agregá”, “Guardá”) without clichés or forced slang.
 - Exercise taxonomy labels live in the localized `names` maps in `app.js`. Add both locale labels for each new tag and keep catalog IDs consistent with those maps. Use British spelling and vocabulary in English, and common, clear gym terminology in Argentinian Spanish.

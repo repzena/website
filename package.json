@@ -8,11 +8,11 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
-    "lint:js": "eslint app.js theme.js playwright.config.js scripts/*.mjs tests",
+    "lint:js": "eslint app.js analytics.js theme.js playwright.config.js scripts/*.mjs tests",
     "lint:json": "node scripts/validate-data.mjs",
     "lint": "npm run lint:js && npm run lint:json && npm run format:check",
-    "format": "prettier --write index.html app.js theme.js service-worker.js styles.css data/exercises.json data/offline-assets.json manifest.webmanifest README.md AGENTS.md Taskfile.yml package.json playwright.config.js scripts/*.mjs tests/*.spec.js eslint.config.js .prettierrc.json .github/workflows/*.yml",
-    "format:check": "prettier --check index.html app.js theme.js service-worker.js styles.css data/exercises.json data/offline-assets.json manifest.webmanifest README.md AGENTS.md Taskfile.yml package.json playwright.config.js scripts/*.mjs tests/*.spec.js eslint.config.js .prettierrc.json .github/workflows/*.yml",
+    "format": "prettier --write index.html app.js analytics.js theme.js service-worker.js styles.css data/exercises.json data/analytics-config.json data/offline-assets.json manifest.webmanifest README.md AGENTS.md Taskfile.yml package.json playwright.config.js scripts/*.mjs tests/*.spec.js eslint.config.js .prettierrc.json .github/workflows/*.yml",
+    "format:check": "prettier --check index.html app.js analytics.js theme.js service-worker.js styles.css data/exercises.json data/analytics-config.json data/offline-assets.json manifest.webmanifest README.md AGENTS.md Taskfile.yml package.json playwright.config.js scripts/*.mjs tests/*.spec.js eslint.config.js .prettierrc.json .github/workflows/*.yml",
     "test:e2e": "playwright test"
   },
   "devDependencies": {

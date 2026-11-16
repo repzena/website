@@ -14,6 +14,7 @@ const publicFiles = [
   'manifest.webmanifest',
   'styles.css',
   'app.js',
+  'analytics.js',
   'theme.js',
   'service-worker.js',
   'robots.txt',

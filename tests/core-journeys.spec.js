@@ -222,7 +222,7 @@ test('content security policy allows the app and blocks injected inline scripts'
     .split(';')
     .map((directive) => directive.trim())
     .find((directive) => directive.startsWith('script-src '));
-  expect(scriptPolicy).toBe("script-src 'self'");
+  expect(scriptPolicy).toBe("script-src 'self' https://www.googletagmanager.com");
 
   await page.evaluate(() => {
     const script = document.createElement('script');
@@ -230,6 +230,78 @@ test('content security policy allows the app and blocks injected inline scripts'
     document.head.append(script);
   });
   await expect(page.locator('html')).not.toHaveAttribute('data-injected', 'yes');
+});
+
+test('analytics stays unloaded until visitors opt in and remembers rejection', async ({ page }) => {
+  let analyticsScriptRequests = 0;
+  await page.route('https://www.googletagmanager.com/gtag/js**', async (route) => {
+    analyticsScriptRequests += 1;
+    await route.fulfill({ status: 200, contentType: 'application/javascript', body: '' });
+  });
+
+  await page.goto('/');
+  await expect(page.locator('#privacy-panel')).toBeVisible();
+  await expect(page.locator('#privacy-panel')).toContainText('Optional Google Analytics');
+  expect(analyticsScriptRequests).toBe(0);
+
+  await page.locator('#analytics-reject').click();
+  await expect(page.locator('#privacy-panel')).toBeHidden();
+  await page.locator('#privacy-settings').click();
+  await expect(page.locator('#privacy-panel')).toBeVisible();
+  await page.reload();
+  await expect(page.locator('#privacy-panel')).toBeHidden();
+  expect(analyticsScriptRequests).toBe(0);
+});
+
+test('analytics loads the configurable ID after opt in, tracks routes and stops after withdrawal', async ({
+  page,
+}) => {
+  let analyticsScriptRequests = 0;
+  await page.route('https://www.googletagmanager.com/gtag/js**', async (route) => {
+    analyticsScriptRequests += 1;
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/javascript',
+      body: 'window.__googleAnalyticsLoaded = true;',
+    });
+  });
+
+  await page.goto('/');
+  await page.locator('#language').selectOption('es');
+  await expect(page.locator('#privacy-panel')).toContainText('Google Analytics es opcional');
+  await page.locator('#analytics-accept').click();
+  await expect.poll(() => page.evaluate(() => window.__googleAnalyticsLoaded)).toBe(true);
+  await expect.poll(() => page.evaluate(() => window.dataLayer?.length || 0)).toBeGreaterThan(2);
+  expect(analyticsScriptRequests).toBe(1);
+  const config = await page.request.get(
+    new URL('data/analytics-config.json', page.url()).toString(),
+  );
+  expect(await config.json()).toEqual({ measurementId: 'G-LGV0WSZRVD' });
+  await expect
+    .poll(() => page.evaluate(() => window.dataLayer?.some((entry) => entry[0] === 'config')))
+    .toBe(true);
+
+  await page.getByRole('link', { name: 'Ver ejercicios' }).click();
+  await expect(page.locator('[data-page="exercises"]')).toBeVisible();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          window.dataLayer?.filter((entry) => entry[0] === 'event' && entry[1] === 'page_view')
+            .length,
+      ),
+    )
+    .toBeGreaterThanOrEqual(2);
+
+  await page.locator('#privacy-settings').click();
+  await page.locator('#analytics-reject').click();
+  await expect(page.locator('#privacy-panel')).toBeHidden();
+  expect(await page.evaluate(() => window[`ga-disable-G-LGV0WSZRVD`])).toBe(true);
+  const eventCountAfterWithdrawal = await page.evaluate(() => window.dataLayer.length);
+  await page.locator('.nav-links [data-page-link="routines"]').click();
+  await expect(page.locator('[data-page="routines"]')).toBeVisible();
+  expect(await page.evaluate(() => window.dataLayer.length)).toBe(eventCountAfterWithdrawal);
+  expect(analyticsScriptRequests).toBe(1);
 });
 
 test('quick add stores an exercise in the selected routine and restores it after reload', async ({

@@ -20,7 +20,7 @@
     "@playwright/test": "^1.65.0",
     "eslint": "^10.14.0",
     "prettier": "^3.10.0",
-    "ajv": "^6.15.0"
+    "ajv": "^8.20.0"
   },
   "overrides": {
     "minimatch": "^11.0.5"

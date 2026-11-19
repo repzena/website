@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('../', import.meta.url));
 const readJson = async (relativePath) =>
   JSON.parse(await readFile(path.join(root, relativePath), 'utf8'));
-const ajv = new Ajv({ allErrors: true, schemaId: 'auto' });
+const ajv = new Ajv({ schemaId: 'auto' });
 const catalogueSchema = await readJson('schemas/exercise-catalog.v1.schema.json');
 const analyticsSchema = await readJson('schemas/analytics-config.v1.schema.json');
 const routineSchema = await readJson('schemas/routine-v2.schema.json');

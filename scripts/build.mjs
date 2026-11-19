@@ -13,6 +13,11 @@ const publicFiles = [
   'favicon.svg',
   'manifest.webmanifest',
   'styles.css',
+  'styles-library.css',
+  'styles-routines.css',
+  'styles-dialogs.css',
+  'styles-responsive.css',
+  'styles-dark.css',
   'app.js',
   'analytics.js',
   'theme.js',
@@ -20,6 +25,7 @@ const publicFiles = [
   'robots.txt',
   'sitemap.xml',
   'data',
+  'modules',
 ];
 
 await rm(stagingDir, { recursive: true, force: true });

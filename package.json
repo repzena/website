@@ -8,18 +8,19 @@
   },
   "scripts": {
     "build": "node scripts/build.mjs",
-    "lint:js": "eslint app.js analytics.js theme.js playwright.config.js scripts/*.mjs tests",
-    "lint:json": "node scripts/validate-data.mjs",
+    "lint:js": "eslint app.js analytics.js theme.js playwright.config.js scripts/*.mjs modules/*.js tests/**/*.js",
+    "lint:json": "node scripts/validate-data.mjs && node scripts/validate-schemas.mjs",
     "lint": "npm run lint:js && npm run lint:json && npm run format:check",
-    "format": "prettier --write index.html app.js analytics.js theme.js service-worker.js styles.css data/exercises.json data/analytics-config.json data/offline-assets.json manifest.webmanifest README.md AGENTS.md Taskfile.yml package.json playwright.config.js scripts/*.mjs tests/*.spec.js eslint.config.js .prettierrc.json .github/workflows/*.yml",
-    "format:check": "prettier --check index.html app.js analytics.js theme.js service-worker.js styles.css data/exercises.json data/analytics-config.json data/offline-assets.json manifest.webmanifest README.md AGENTS.md Taskfile.yml package.json playwright.config.js scripts/*.mjs tests/*.spec.js eslint.config.js .prettierrc.json .github/workflows/*.yml",
+    "format": "prettier --write index.html app.js analytics.js theme.js service-worker.js styles.css styles-library.css styles-routines.css styles-dialogs.css styles-responsive.css styles-dark.css data/exercises.json data/analytics-config.json data/offline-assets.json manifest.webmanifest README.md AGENTS.md Taskfile.yml package.json playwright.config.js scripts/*.mjs modules/*.js schemas/*.json tests/*.spec.js tests/support/*.js eslint.config.js .prettierrc.json .github/workflows/*.yml",
+    "format:check": "prettier --check index.html app.js analytics.js theme.js service-worker.js styles.css styles-library.css styles-routines.css styles-dialogs.css styles-responsive.css styles-dark.css data/exercises.json data/analytics-config.json data/offline-assets.json manifest.webmanifest README.md AGENTS.md Taskfile.yml package.json playwright.config.js scripts/*.mjs modules/*.js schemas/*.json tests/*.spec.js tests/support/*.js eslint.config.js .prettierrc.json .github/workflows/*.yml",
     "test:e2e": "playwright test"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",
     "@playwright/test": "^1.65.0",
     "eslint": "^10.14.0",
-    "prettier": "^3.10.0"
+    "prettier": "^3.10.0",
+    "ajv": "^6.15.0"
   },
   "overrides": {
     "minimatch": "^11.0.5"

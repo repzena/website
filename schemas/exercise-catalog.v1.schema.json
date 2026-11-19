@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://repzena.github.io/schemas/exercise-catalog.v1.schema.json",
+  "title": "Repzena exercise catalogue v1",
+  "type": "object",
+  "required": ["format", "version", "exercises"],
+  "additionalProperties": false,
+  "properties": {
+    "format": { "const": "repzena-exercise-catalog" },
+    "version": { "const": 1 },
+    "exercises": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "pattern",
+          "equipment",
+          "level",
+          "image",
+          "how",
+          "cues",
+          "primaryMuscles",
+          "secondaryMuscles",
+          "focus"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "name": { "$ref": "#/definitions/localizedText" },
+          "pattern": { "type": "string", "minLength": 1 },
+          "equipment": { "$ref": "#/definitions/stringList" },
+          "level": { "enum": ["beginner", "intermediate", "advanced"] },
+          "image": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "how": { "$ref": "#/definitions/localizedList" },
+          "cues": { "$ref": "#/definitions/localizedList" },
+          "aliases": { "$ref": "#/definitions/localizedListAllowEmpty" },
+          "primaryMuscles": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "secondaryMuscles": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+          "focus": { "$ref": "#/definitions/stringList" },
+          "images": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["src", "alt"],
+              "additionalProperties": false,
+              "properties": {
+                "src": {
+                  "type": "string",
+                  "pattern": "^\\./assets/[a-zA-Z0-9_-]+(?:/[a-zA-Z0-9_-]+)*\\.(?:webp|png|jpe?g)$"
+                },
+                "alt": { "$ref": "#/definitions/localizedText" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "localizedText": {
+      "type": "object",
+      "required": ["en", "es"],
+      "additionalProperties": false,
+      "properties": {
+        "en": { "type": "string", "minLength": 1 },
+        "es": { "type": "string", "minLength": 1 }
+      }
+    },
+    "localizedList": {
+      "type": "object",
+      "required": ["en", "es"],
+      "additionalProperties": false,
+      "properties": {
+        "en": { "$ref": "#/definitions/stringList" },
+        "es": { "$ref": "#/definitions/stringList" }
+      }
+    },
+    "localizedListAllowEmpty": {
+      "type": "object",
+      "required": ["en", "es"],
+      "additionalProperties": false,
+      "properties": {
+        "en": { "type": "array", "items": { "type": "string" } },
+        "es": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "stringList": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+  }
+}

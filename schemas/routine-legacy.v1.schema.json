@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://repzena.github.io/schemas/routine-legacy.v1.schema.json",
+  "title": "Supported legacy Repzena routine import v1",
+  "description": "Compatibility contract for pre-v2 routine files. Runtime limits and sanitization are additionally enforced by the importer.",
+  "type": "object",
+  "anyOf": [
+    { "required": ["days"] },
+    {
+      "required": ["routine"],
+      "properties": { "routine": { "type": "object", "required": ["days"] } }
+    }
+  ],
+  "properties": {
+    "format": { "type": "string" },
+    "version": { "type": "integer", "minimum": 1 },
+    "days": { "$ref": "#/definitions/days" },
+    "routine": { "type": "object", "properties": { "days": { "$ref": "#/definitions/days" } } }
+  },
+  "definitions": {
+    "days": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": ["string", "object"] },
+          "exercises": { "type": "array", "items": { "type": "object" } },
+          "sections": { "type": "array", "items": { "type": "object" } },
+          "unsectioned_exercises": { "type": "array", "items": { "type": "object" } }
+        }
+      }
+    }
+  }
+}

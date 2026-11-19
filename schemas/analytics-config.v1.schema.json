@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://repzena.github.io/schemas/analytics-config.v1.schema.json",
+  "title": "Repzena analytics configuration v1",
+  "type": "object",
+  "required": ["version", "measurementId"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": 1 },
+    "measurementId": { "type": "string", "pattern": "^G-[A-Z0-9]+$" }
+  }
+}

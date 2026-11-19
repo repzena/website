@@ -27,7 +27,13 @@ const browserGlobals = Object.fromEntries(
 
 export default [
   {
-    files: ['app.js', 'playwright.config.js', 'scripts/**/*.mjs', 'tests/**/*.js'],
+    files: [
+      'app.js',
+      'modules/**/*.js',
+      'playwright.config.js',
+      'scripts/**/*.mjs',
+      'tests/**/*.js',
+    ],
     ...js.configs.recommended,
     languageOptions: {
       ...js.configs.recommended.languageOptions,

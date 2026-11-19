@@ -5,7 +5,9 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const catalog = JSON.parse(await readFile(path.join(root, 'data', 'exercises.json'), 'utf8'));
+const catalog = JSON.parse(
+  await readFile(path.join(root, 'data', 'exercises.json'), 'utf8'),
+).exercises;
 const sourceUrls = [
   ...catalog.flatMap((exercise) =>
     Array.isArray(exercise.images) ? exercise.images.map((image) => image.src) : [],

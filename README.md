@@ -25,7 +25,7 @@ Then open `http://localhost:8000`.
 
 ## Content
 
-Edit `data/exercises.json` to add or update public exercise entries. Each entry contains localized names, instructions and cues, plus normalized tag IDs. Artwork in the first version is original, schematic SVG-style art rendered locally in the page; replace or refine it as the reviewed illustration set is created.
+Edit `data/exercises.json` to add or update public exercise entries. The catalogue envelope uses `format: "repzena-exercise-catalog"` and `version: 1`; each entry contains localized names, instructions and cues, normalized tag IDs, and optional local artwork paths.
 
 The supplied personal routine file is in `private-data/rutina-julian-3-dias.json` and is intentionally ignored by Git. Import it using the **Import routine** control. Exercise instructions are not inferred from its video links; review those links before relying on them.
 
@@ -36,6 +36,14 @@ The project is plain HTML, CSS, JavaScript modules, and JSON. It can be publishe
 ## Future direction
 
 Keep exercise IDs and routine JSON provider-neutral. A later account/sync version will need a separate authentication and storage service; static hosting alone does not provide accounts or cloud sync.
+
+## Code and data contracts
+
+The browser app is an orchestration layer in `app.js`; focused modules under `modules/` own language and labels, route parsing, exercise search and catalogue loading, routine storage and transfer, and offline/PWA controls. Styles are split by page/component, then responsive rules and dark-theme overrides load last. Analytics remains isolated in `analytics.js`.
+
+JSON contracts live in `schemas/`: exercise catalogue v1, analytics config v1, routine export v2, and the supported legacy routine import format. `task lint` validates the catalogue’s data-specific rules and checks valid and invalid schema examples, including routine format versions. Keep legacy routine imports supported when evolving the export format.
+
+Playwright coverage is grouped by user journey, catalogue, routine editing, offline/PWA, preferences, and accessibility. The accessibility suite checks modal keyboard behavior, focus return, and WCAG AA contrast for key text and controls in both themes.
 
 ## Common tasks
 

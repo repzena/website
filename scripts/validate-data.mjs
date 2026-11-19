@@ -5,7 +5,8 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const file = path.join(root, 'data', 'exercises.json');
-const entries = JSON.parse(await readFile(file, 'utf8'));
+const catalogue = JSON.parse(await readFile(file, 'utf8'));
+const entries = catalogue.exercises;
 const errors = [];
 const locales = ['en', 'es'];
 const isText = (value) => typeof value === 'string' && value.trim().length > 0;
@@ -28,8 +29,11 @@ const isLocalizedAliases = (value) =>
   !Array.isArray(value) &&
   locales.every((locale) => Array.isArray(value[locale]) && value[locale].every(isText));
 
+if (catalogue.format !== 'repzena-exercise-catalog' || catalogue.version !== 1) {
+  throw new Error('Exercise data must use repzena-exercise-catalog version 1.');
+}
 if (!Array.isArray(entries) || entries.length === 0) {
-  throw new Error('Exercise data must be a non-empty JSON array.');
+  throw new Error('Exercise data must contain a non-empty exercises array.');
 }
 const ids = new Set();
 const taxonomy = {

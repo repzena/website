@@ -9,7 +9,7 @@ const [catalogText, serviceWorker] = await Promise.all([
   readFile(catalogPath, 'utf8'),
   readFile(serviceWorkerPath, 'utf8'),
 ]);
-const catalog = JSON.parse(catalogText);
+const catalog = JSON.parse(catalogText).exercises;
 const coreMatch = serviceWorker.match(/const CORE_FILES = \[([\s\S]*?)\];/);
 
 if (!coreMatch) throw new Error('Could not find CORE_FILES in service-worker.js.');

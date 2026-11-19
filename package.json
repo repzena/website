@@ -19,7 +19,7 @@
     "@eslint/js": "^10.0.0",
     "@playwright/test": "^1.65.0",
     "eslint": "^10.14.0",
-    "prettier": "^3.9.10",
+    "prettier": "^3.10.0",
     "ajv": "^6.15.0"
   },
   "overrides": {

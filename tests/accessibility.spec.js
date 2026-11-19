@@ -39,6 +39,10 @@ test('body text, primary buttons and keyboard focus indicators meet WCAG AA cont
   await page.goto('/');
   for (const theme of ['light', 'dark']) {
     await page.locator('#theme').selectOption(theme);
+    await expect(page.locator('.hero-secondary')).toHaveCSS(
+      'background-color',
+      theme === 'dark' ? 'rgb(27, 37, 32)' : 'rgb(255, 254, 250)',
+    );
     const colors = await page.evaluate(() => {
       const read = (selector) => {
         const element = document.querySelector(selector);
@@ -51,7 +55,7 @@ test('body text, primary buttons and keyboard focus indicators meet WCAG AA cont
       return {
         body: read('body'),
         primaryButton: read('.button-dark'),
-        secondaryButton: read('.button-light'),
+        secondaryButton: read('.hero-secondary'),
         focus,
       };
     });

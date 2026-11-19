@@ -100,7 +100,7 @@ test('analytics loads the configurable ID after opt in, tracks routes and stops 
   const config = await page.request.get(
     new URL('data/analytics-config.json', page.url()).toString(),
   );
-  expect(await config.json()).toEqual({ measurementId: 'G-LGV0WSZRVD' });
+  expect(await config.json()).toEqual({ version: 1, measurementId: 'G-LGV0WSZRVD' });
   await expect
     .poll(() => page.evaluate(() => window.dataLayer?.some((entry) => entry[0] === 'config')))
     .toBe(true);

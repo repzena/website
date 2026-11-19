@@ -37,15 +37,18 @@
 }
 :root[data-theme='dark'] .button-dark,
 :root[data-theme='dark'] .add-button {
-  background: #d7e5dc;
-  color: #142019;
+  background: #122720;
+  color: #fff;
 }
 :root[data-theme='dark'] .button-dark:hover {
-  background: #c2d6ca;
+  background: #28473c;
 }
-:root[data-theme='dark'] .button-light {
+:root[data-theme='dark'] .button.button-light {
   background: #1b2520;
-  color: var(--ink);
+  color: #fff;
+}
+:root[data-theme='dark'] .button.button-light:hover {
+  background: #35443b;
 }
 :root[data-theme='dark'] .library-section {
   background: #151e1a;

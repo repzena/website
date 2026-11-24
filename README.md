@@ -41,7 +41,7 @@ Keep exercise IDs and routine JSON provider-neutral. A later account/sync versio
 
 The browser app is an orchestration layer in `app.js`; focused modules under `modules/` own language and labels, route parsing, exercise search and catalogue loading, routine storage and transfer, and offline/PWA controls. Styles are split by page/component, then responsive rules and dark-theme overrides load last. Analytics remains isolated in `analytics.js`.
 
-JSON contracts live in `schemas/`: exercise catalogue v1, analytics config v1, routine export v2, and the supported legacy routine import format. `task lint` validates the catalogue’s data-specific rules and checks valid and invalid schema examples, including routine format versions. Keep legacy routine imports supported when evolving the export format.
+JSON contracts live in `schemas/`: exercise catalogue v1, analytics config v1, routine exports v2 and v3, and the supported legacy routine import format. `task lint` validates the catalogue’s data-specific rules and checks valid and invalid schema examples, including routine format versions. Keep legacy routine imports supported when evolving the export format.
 
 Playwright coverage is grouped by user journey, catalogue, routine editing, offline/PWA, preferences, and accessibility. The accessibility suite checks modal keyboard behavior, focus return, and WCAG AA contrast for key text and controls in both themes.
 

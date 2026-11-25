@@ -34,6 +34,12 @@
           "equipment": { "$ref": "#/definitions/stringList" },
           "level": { "enum": ["beginner", "intermediate", "advanced"] },
           "image": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "prescriptionMode": { "enum": ["reps", "time"] },
+          "defaultDurationSeconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3600
+          },
           "how": { "$ref": "#/definitions/localizedList" },
           "cues": { "$ref": "#/definitions/localizedList" },
           "aliases": { "$ref": "#/definitions/localizedListAllowEmpty" },

@@ -15,7 +15,7 @@
 
 - `index.html` — page structure and primary inline illustration.
 - `styles.css` — responsive layout, colors, and component styles.
-- `app.js` — language strings, exercise rendering/search/filtering, detail views, and routine behavior. It keeps a validated catalogue copy in browser storage for offline fallback.
+- `app.js` — exercise rendering/search/filtering, detail views, routine behavior, and the in-guide workout timer. It keeps a validated catalogue copy in browser storage for offline fallback.
 - `theme.js` — early theme preference bootstrap, loaded externally so the page can enforce a Content Security Policy without inline JavaScript.
 - `data/exercises.json` — public exercise catalog; each exercise has a stable ID, localized names, instructions and cues, tags, and illustration key.
 - `data/offline-assets.json` — generated content hashes for every exercise image and the home image; refresh it with `task offline:manifest` after changing artwork.
@@ -34,6 +34,7 @@
 
 ## Content and UX practices
 
+- Exercise prescriptions default to repetitions unless a catalogue entry sets `prescriptionMode: "time"` and `defaultDurationSeconds`. Routine items store their own `prescriptionMode`, `reps`, or `durationSeconds` so users can override the catalogue default. Continue importing routine formats v1 and v2 when evolving exports.
 - Write exercise instructions as short, actionable steps. Keep cautions specific, practical, and proportionate; do not present the guide as medical advice.
 - Preserve source names and prescriptions when importing a user's routine. Treat external video links as unverified until checked.
 - Keep the phone-at-the-gym use case first: readable text, clear movement illustrations, obvious equipment and muscle tags, and controls with comfortable touch targets.

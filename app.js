@@ -154,11 +154,14 @@ function renderTimerIndicator() {
       : activeTimer.running
         ? t('timerRunning')
         : t('timerPaused');
-  const progressText = activeTimer.routineItem
-    ? ` · ${t('timerSetProgress').replace('{set}', activeTimer.setNumber).replace('{total}', activeTimer.totalSets)}`
-    : '';
-  indicator.hidden = false;
-  indicator.innerHTML = `<div class="active-timer-copy"><strong>${escapeHtml(localized(activeTimer.names) || activeTimer.name)}</strong><span data-timer-indicator-time role="timer" aria-live="off">${formatTimerSeconds(remaining)}</span><small><span data-timer-indicator-status role="status">${escapeHtml(stateText)}</span><span data-timer-indicator-progress>${escapeHtml(progressText)}</span></small></div><button type="button" data-timer-open>${escapeHtml(t('timerOpenGuide'))}</button><button type="button" data-timer-toggle>${escapeHtml(activeTimer.running ? t('timerPause') : t('timerResume'))}</button><button type="button" data-timer-clear aria-label="${escapeHtml(t('timerClear'))}">×</button>`;
+  const progressText =
+    activeTimer.routineItem && activeTimer.totalSets > 1
+      ? t('timerSetProgress')
+          .replace('{set}', activeTimer.setNumber)
+          .replace('{total}', activeTimer.totalSets)
+      : '';
+  indicator.hidden = $('#exercise-dialog')?.open || false;
+  indicator.innerHTML = `<div class="active-timer-copy"><strong>${escapeHtml(localized(activeTimer.names) || activeTimer.name)}</strong><span data-timer-indicator-time role="timer" aria-live="off">${formatTimerSeconds(remaining)}</span><small><span data-timer-indicator-status role="status">${escapeHtml(stateText)}</span><span data-timer-indicator-progress>${progressText ? ` · ${escapeHtml(progressText)}` : ''}</span></small></div><button type="button" data-timer-open>${escapeHtml(t('timerOpenGuide'))}</button><button type="button" data-timer-toggle>${escapeHtml(activeTimer.running ? t('timerPause') : t('timerResume'))}</button><button type="button" data-timer-clear aria-label="${escapeHtml(t('timerClear'))}">×</button>`;
   indicator.querySelector('[data-timer-open]').onclick = () =>
     openDetail(activeTimer.exerciseId, true, activeTimer.routineItem);
   indicator.querySelector('[data-timer-toggle]').onclick = () => {
@@ -235,11 +238,12 @@ function updateTimerDisplays() {
       ? $('#dialog-content [data-timer-set-progress]')
       : null;
     if (progress)
-      progress.textContent = activeTimer.routineItem
-        ? ` · ${t('timerSetProgress')
-            .replace('{set}', activeTimer.setNumber)
-            .replace('{total}', activeTimer.totalSets)}`
-        : '';
+      progress.textContent =
+        activeTimer.routineItem && activeTimer.totalSets > 1
+          ? t('timerSetProgress')
+              .replace('{set}', activeTimer.setNumber)
+              .replace('{total}', activeTimer.totalSets)
+          : '';
   }
   const indicator = $('#active-timer');
   if (indicator.hidden) renderTimerIndicator();
@@ -258,9 +262,12 @@ function updateTimerDisplays() {
             : t('timerPaused');
     if (toggle) toggle.textContent = t(activeTimer.running ? 'timerPause' : 'timerResume');
     if (progress)
-      progress.textContent = t('timerSetProgress')
-        .replace('{set}', activeTimer.setNumber)
-        .replace('{total}', activeTimer.totalSets);
+      progress.textContent =
+        activeTimer.routineItem && activeTimer.totalSets > 1
+          ? ` · ${t('timerSetProgress')
+              .replace('{set}', activeTimer.setNumber)
+              .replace('{total}', activeTimer.totalSets)}`
+          : '';
   }
 }
 function pauseTimer() {
@@ -341,10 +348,14 @@ function bindGuideTimer() {
   const sameTimer = activeTimer?.exerciseId === context.exercise.id;
   if (sameTimer) {
     const setActions = root.querySelector('[data-timer-set-actions]');
-    setActions.hidden = activeTimer.status !== 'complete';
-    root.querySelector('[data-timer-set-progress]').textContent = t('timerSetProgress')
-      .replace('{set}', activeTimer.setNumber)
-      .replace('{total}', activeTimer.totalSets);
+    setActions.hidden =
+      activeTimer.status !== 'complete' || activeTimer.setNumber >= activeTimer.totalSets;
+    root.querySelector('[data-timer-set-progress]').textContent =
+      activeTimer.routineItem && activeTimer.totalSets > 1
+        ? t('timerSetProgress')
+            .replace('{set}', activeTimer.setNumber)
+            .replace('{total}', activeTimer.totalSets)
+        : '';
     root.querySelector('[data-timer-pause]').disabled = !activeTimer.running;
     start.disabled = activeTimer.running;
   } else {
@@ -902,6 +913,7 @@ function openDetail(id, updateUrl = true, routineItem = null) {
   $('#dialog-content').querySelector('[data-detail-add]').onclick = () => addById(id);
   $('#dialog-content').querySelector('[data-copy-guide]').onclick = copyGuideLink;
   if (!$('#exercise-dialog').open) $('#exercise-dialog').showModal();
+  renderTimerIndicator();
 }
 function syncRouteWithUrl() {
   const id = exerciseIdFromHash(location.hash);
@@ -1691,6 +1703,7 @@ $('#image-viewer').addEventListener('click', (e) => {
   if (e.target === e.currentTarget) e.currentTarget.close();
 });
 $('#exercise-dialog').addEventListener('close', () => {
+  renderTimerIndicator();
   if (closingFromNavigation) {
     closingFromNavigation = false;
     return;

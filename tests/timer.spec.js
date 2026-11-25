@@ -55,8 +55,10 @@ test('exercise guide timer keeps running after closing and can be reopened', asy
   await expect(page.locator('[data-guide-duration]')).toHaveValue('30');
   await page.locator('[data-guide-duration]').fill('2');
   await page.locator('[data-timer-start]').click();
-  await expect(page.locator('#active-timer')).toBeVisible();
   await expect(page.locator('#dialog-content [data-timer-status]')).toHaveText('Timer running');
+  // The guide's own timer remains visible inside the modal; the floating control
+  // appears only after closing the modal so it never sits behind the dialog.
+  await expect(page.locator('#active-timer')).toBeHidden();
   await page.locator('[data-timer-pause]').click();
   await expect(page.locator('#dialog-content [data-timer-status]')).toHaveText('Timer paused');
   await page.locator('[data-timer-reset]').click();
@@ -78,6 +80,9 @@ test('exercise guide timer keeps running after closing and can be reopened', asy
   await page.locator('#active-timer [data-timer-open]').click();
   await expect(page.locator('#exercise-dialog')).toBeVisible();
   await expect(page.locator('#dialog-content [data-timer-status]')).toHaveText('Time is up');
+  await expect(page.locator('#active-timer')).toBeHidden();
+  await page.locator('#dialog-close').click();
+  await expect(page.locator('#active-timer')).toBeVisible();
   await page.locator('#active-timer [data-timer-clear]').click();
   await expect(page.locator('#active-timer')).toBeHidden();
 });

@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://repzena.github.io/schemas/routine-v2.schema.json",
-  "title": "Repzena routine export v2",
+  "title": "Repzena routine export v2 and v3",
   "type": "object",
   "required": ["format", "version", "routine"],
   "additionalProperties": false,
@@ -10,12 +10,67 @@
       "const": "gym-exercise-routine"
     },
     "version": {
-      "const": 2
+      "enum": [2, 3]
     },
     "routine": {
       "$ref": "#/definitions/routine"
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "version": { "const": 3 }
+        }
+      },
+      "then": {
+        "properties": {
+          "routine": {
+            "type": "object",
+            "properties": {
+              "days": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sections": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "exercises": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "required": ["prescription"]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "unsectioned_exercises": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["prescription"]
+                      }
+                    },
+                    "exercises": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["prescription"]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
   "definitions": {
     "text": {
       "oneOf": [
@@ -57,6 +112,30 @@
         },
         "reps_or_time": {
           "$ref": "#/definitions/text"
+        },
+        "prescription": {
+          "type": "object",
+          "required": ["mode"],
+          "additionalProperties": false,
+          "properties": {
+            "mode": { "enum": ["reps", "time"] },
+            "reps": { "$ref": "#/definitions/text" },
+            "duration_seconds": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 3600
+            }
+          },
+          "allOf": [
+            {
+              "if": { "properties": { "mode": { "const": "time" } } },
+              "then": { "required": ["duration_seconds"] }
+            },
+            {
+              "if": { "properties": { "mode": { "const": "reps" } } },
+              "then": { "required": ["reps"] }
+            }
+          ]
         },
         "section": {
           "oneOf": [

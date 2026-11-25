@@ -111,6 +111,20 @@ entries.forEach((exercise, index) => {
   for (const key of ['pattern', 'image', 'level']) {
     if (!isText(exercise[key])) errors.push(`${at} needs ${key}.`);
   }
+  if (
+    exercise.prescriptionMode !== undefined &&
+    !['reps', 'time'].includes(exercise.prescriptionMode)
+  )
+    errors.push(`${at} prescriptionMode must be reps or time.`);
+  if (
+    exercise.prescriptionMode === 'time' &&
+    (!Number.isInteger(exercise.defaultDurationSeconds) ||
+      exercise.defaultDurationSeconds < 1 ||
+      exercise.defaultDurationSeconds > 3600)
+  )
+    errors.push(`${at} timed exercises need a default duration from 1 to 3600 seconds.`);
+  if (exercise.prescriptionMode !== 'time' && exercise.defaultDurationSeconds !== undefined)
+    errors.push(`${at} only timed exercises may define a default duration.`);
   if (isText(exercise.pattern) && !taxonomy.pattern.has(exercise.pattern))
     errors.push(`${at} uses an unknown movement pattern: ${exercise.pattern}.`);
   if (isText(exercise.image) && !/^[a-z0-9-]+$/.test(exercise.image))

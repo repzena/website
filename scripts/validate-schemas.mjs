@@ -66,6 +66,15 @@ for (const [kind, example] of Object.entries(examples)) {
     );
   }
 }
+const timedRoutineExample = JSON.parse(JSON.stringify(examples.routine));
+timedRoutineExample.version = 3;
+const timedExampleExercise = timedRoutineExample.routine.days[0].sections[0].exercises[0];
+timedExampleExercise.prescription = { mode: 'time', duration_seconds: 30 };
+if (!validators.routine(timedRoutineExample)) {
+  throw new Error(
+    `routine v3 valid example failed schema validation: ${ajv.errorsText(validators.routine.errors)}`,
+  );
+}
 
 const invalidExamples = [
   ['catalogue', { ...examples.catalogue, version: 2 }],
@@ -73,6 +82,12 @@ const invalidExamples = [
   ['routine', { ...examples.routine, version: 1 }],
   ['legacy', { days: [{ exercises: 'not-an-array' }] }],
 ];
+const invalidTimedRoutine = JSON.parse(JSON.stringify(timedRoutineExample));
+invalidTimedRoutine.routine.days[0].sections[0].exercises[0].prescription.duration_seconds = 0;
+invalidExamples.push(['routine', invalidTimedRoutine]);
+const missingV3Prescription = JSON.parse(JSON.stringify(timedRoutineExample));
+delete missingV3Prescription.routine.days[0].sections[0].exercises[0].prescription;
+invalidExamples.push(['routine', missingV3Prescription]);
 for (const [kind, example] of invalidExamples) {
   if (validators[kind](example))
     throw new Error(`${kind} invalid example unexpectedly passed schema validation`);

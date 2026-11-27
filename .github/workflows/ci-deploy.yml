@@ -10,7 +10,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: repzena-${{ github.ref }}
+  # Share a lock across workflows by source branch. Pull requests use head_ref;
+  # pushes and manual runs use ref_name.
+  group: repzena-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
